@@ -11,6 +11,10 @@ return [
         'php_version' => Forge::PHP_72,
         'aws_vpc_id' => 'vpc-341f2751',
         'aws_subnet_id' => 'subnet-bcbfb7e5',
+        'sites' => [
+            'soapbox-api.web',
+            'soapbox-web-client.web',
+        ],
     ],
     'worker' => [
         'name' => 'goodtalk-worker-{number}',
@@ -20,5 +24,8 @@ return [
         'php_version' => Forge::PHP_72,
         'aws_vpc_id' => 'vpc-341f2751',
         'aws_subnet_id' => 'subnet-bcbfb7e5',
+        'sites' => [
+            'soapbox-api.worker',
+        ],
     ],
 ];

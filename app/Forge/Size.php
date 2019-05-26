@@ -2,6 +2,8 @@
 
 namespace App\Forge;
 
+use App\Entity;
+
 class Size extends Entity
 {
     public function getId(): string

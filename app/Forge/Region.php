@@ -2,6 +2,7 @@
 
 namespace App\Forge;
 
+use App\Entity;
 use Illuminate\Support\Collection;
 
 class Region extends Entity
