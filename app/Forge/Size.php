@@ -2,23 +2,16 @@
 
 namespace App\Forge;
 
-class Size
+class Size extends Entity
 {
-    private $data;
-
-    public function __construct($data)
-    {
-        $this->data = $data;
-    }
-
     public function getId(): string
     {
-        return $this->data['id'];
+        return $this->get('id');
     }
 
     public function getSize(): string
     {
-        return $this->data['size'];
+        return $this->get('size');
     }
 
     public function isFor(string $size): bool

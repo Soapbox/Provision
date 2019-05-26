@@ -76,11 +76,12 @@ class CreateServer extends Command
         if (!$this->confirm('Are you sure you want to create this server?')) {
             return 1;
         }
-        (new SiteConfigUpdater())->addServerToConfig($service, $type, $name);
         dd($params);
 
         $this->line('Provisioning a server. This will take a few minutes.');
         $server = Forge::createServer($params);
+
+        (new SiteConfigUpdater())->addServerToConfig($service, $type, $name);
 
         while (!$server->isReady()) {
             sleep(60);

@@ -20,4 +20,8 @@ class Site extends Entity
     {
         return $this->getName() == 'Default';
     }
+
+    public function diff(array $siteConfig): void
+    {
+    }
 }

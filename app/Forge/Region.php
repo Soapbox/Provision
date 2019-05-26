@@ -4,18 +4,11 @@ namespace App\Forge;
 
 use Illuminate\Support\Collection;
 
-class Region
+class Region extends Entity
 {
-    private $data;
-
-    public function __construct($data)
-    {
-        $this->data = $data;
-    }
-
     public function getId(): string
     {
-        return $this->data['id'];
+        return $this->get('id');
     }
 
     public function isFor(string $region): bool
@@ -25,7 +18,7 @@ class Region
 
     public function getSizes(): Collection
     {
-        return collect($this->data['sizes'])->mapInto(Size::class);
+        return collect($this->get('sizes'))->mapInto(Size::class);
     }
 
     public function getSize(string $size): Size

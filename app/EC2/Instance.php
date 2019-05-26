@@ -2,22 +2,15 @@
 
 namespace App\EC2;
 
-class Instance
+class Instance extends Entity
 {
-    private $data;
-
-    public function __construct($data)
-    {
-        $this->data = $data;
-    }
-
     public function getName(): string
     {
-        return $this->data['KeyName'];
+        return $this->get('KeyName');
     }
 
     public function getId(): string
     {
-        return $this->data['InstanceId'];
+        return $this->get('InstanceId');
     }
 }
