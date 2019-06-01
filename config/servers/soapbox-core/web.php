@@ -29,6 +29,10 @@ return [
                 'key' => config('services.logdna.key'),
             ],
         ],
+        [
+            'script' => 'install-datadog-apm.sh',
+            'arguments' => [],
+        ],
     ],
     'sites' => [
         [
