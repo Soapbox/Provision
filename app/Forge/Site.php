@@ -18,10 +18,11 @@ class Site extends Entity
 
     public function isDefault(): bool
     {
-        return $this->getName() == 'Default';
+        return $this->getName() == 'default';
     }
 
-    public function diff(array $siteConfig): void
+    public function isInstalled(): bool
     {
+        return $this->get('status') == 'installed';
     }
 }

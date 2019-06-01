@@ -1,6 +1,6 @@
 <?php
 
-namespace App;
+namespace App\Forge\Constants;
 
 class SiteTypes
 {

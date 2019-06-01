@@ -64,6 +64,16 @@ return [
             'url' => env('AWS_URL'),
         ],
 
+        'scripts' => [
+            'driver' => 'local',
+            'root' => resource_path('scripts'),
+        ],
+
+        'nginx' => [
+            'driver' => 'local',
+            'root' => resource_path('nginx'),
+        ],
+
     ],
 
 ];

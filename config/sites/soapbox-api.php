@@ -1,5 +1,5 @@
 <?php
-use App\SiteTypes;
+use App\Forge\Constants\SiteTypes;
 
 return [
     'web' => [
@@ -24,14 +24,6 @@ return [
             'redis-queue-001',
         ],
         'nginx' => 'soapbox-api-nginx',
-        'server-scripts' => [
-            // Scripts::installLogDNA(),
-            // Scripts::installDataDog(),
-        ],
-        'tags' => [
-            'track-on-datadog' => true,
-            'server-type' => 'api:web',
-        ],
     ],
     'worker' => [
         'servers' => [

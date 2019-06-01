@@ -2,11 +2,12 @@
 
 namespace App\Forge;
 
+use App\Recipe;
 use Carbon\Carbon;
-use GuzzleHttp\Client;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use JSHayes\FakeRequests\ClientFactory;
 
 class Forge
 {
@@ -14,9 +15,11 @@ class Forge
 
     const PHP_72 = 'php72';
 
-    private static function getClient(): Client
+    private $client;
+
+    public function __construct(ClientFactory $factory)
     {
-        return new Client([
+        $this->client = $factory->make([
             'base_uri' => 'https://forge.laravel.com/api/v1/',
             'headers' => [
                 'Accept' => 'application/json',
@@ -26,33 +29,87 @@ class Forge
         ]);
     }
 
-    public static function getRegions(): Collection
+    public function getRegions(): Collection
     {
         return Cache::remember('forge.regions', Carbon::now()->addDay(), function () {
-            $response = json_decode(self::getClient()->get('regions')->getBody(), true);
+            $response = json_decode($this->client->get('regions')->getBody(), true);
             return collect(Arr::get($response, 'regions.aws'))->mapInto(Region::class);
         });
     }
 
-    public static function getServers(): Collection
+    public function getServers(): Collection
     {
         return Cache::remember('forge.servers', Carbon::now()->addDay(), function () {
-            $response = json_decode(self::getClient()->get('servers')->getBody(), true);
+            $response = json_decode($this->client->get('servers')->getBody(), true);
             return collect(Arr::get($response, 'servers'))->mapInto(Server::class);
         });
     }
 
-    public static function getServer(string $serverName): Server
+    public function getServer(string $serverName): Server
     {
         return self::getServers()->first(function (Server $server) use ($serverName) {
             return $server->getName() == $serverName;
         });
     }
 
-    public static function getSites(Server $server): Collection
+    public function createServer(array $params): Server
+    {
+        $response = $this->client->post('servers', ['json' => $params]);
+        Cache::forget('forge.servers');
+        Cache::forget('ec2.instances');
+        return new Server(Arr::get(json_decode($response->getBody(), true), 'server'));
+    }
+
+    public function getSites(Server $server): Collection
     {
         $serverId = $server->getId();
-        $response = json_decode(self::getClient()->get("servers/$serverId/sites")->getBody(), true);
-        return collect(Arr::get($response, 'sites'))->mapInto(Site::class);
+        return Cache::remember("forge.server.{$serverId}.sites", Carbon::now()->addDay(), function () use ($serverId) {
+            $response = json_decode($this->client->get("servers/$serverId/sites")->getBody(), true);
+            return collect(Arr::get($response, 'sites'))->mapInto(Site::class);
+        });
+    }
+
+    public function getSite(Server $server, string $name): Site
+    {
+        return $this->getSites($server)->first(function ($site) use ($name) {
+            return $site->getName() == $name;
+        });
+    }
+
+    public function createSite(Server $server, array $params): Site
+    {
+        $response = $this->client->post("servers/{$server->getId()}/sites", ['json' => $params]);
+        Cache::forget("forge.server.{$server->getId()}.sites");
+        return new Site(json_decode($response->getBody(), true)['site']);
+    }
+
+    public function deleteSite(Server $server, Site $site): void
+    {
+        $this->client->delete("servers/{$server->getId()}/sites/{$site->getId()}");
+        Cache::forget("servers.{$server->getId()}.sites");
+    }
+
+    public function updateNginxConfig(Server $server, Site $site, string $nginx): void
+    {
+        $this->client->put("servers/{$server->getId()}/sites/{$site->getId()}/nginx", ['json' => ['content' => $nginx]]);
+    }
+
+    public function runRecipe(Server $server, Recipe $recipe): void
+    {
+        $response = $this->client->post('recipes', [
+            'json' => [
+                'name' => $recipe->getName(),
+                'user' => $recipe->getUser(),
+                'script' => $recipe->getScript(),
+            ],
+        ]);
+
+        $recipeId = Arr::get(json_decode($response->getBody(), true), 'recipe.id');
+
+        $this->client->post("recipes/$recipeId/run", [
+            'json' => [
+                'servers' => [$server->getId()],
+            ],
+        ]);
     }
 }

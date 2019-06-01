@@ -2,10 +2,17 @@
 
 namespace App\Console\Commands;
 
+use App\Recipe;
+use App\Script;
+use App\Waiter;
 use App\EC2\EC2;
+use App\Forge\Site;
 use App\Forge\Forge;
-use App\SiteConfigUpdater;
+use App\Forge\Server;
+use Illuminate\Support\Arr;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class CreateServer extends Command
 {
@@ -24,13 +31,107 @@ class CreateServer extends Command
     protected $description = 'Command description';
 
     /**
+     * @var \App\Forge\Forge
+     */
+    private $forge;
+
+    /**
+     * @var \App\EC2\EC2
+     */
+    private $ec2;
+
+    private $waiter;
+
+    /**
      * Create a new command instance.
      *
      * @return void
      */
-    public function __construct()
+    public function __construct(Forge $forge, EC2 $ec2, Waiter $waiter)
     {
         parent::__construct();
+
+        $this->forge = $forge;
+        $this->ec2 = $ec2;
+        $this->waiter = $waiter;
+    }
+
+    private function getServerSize(array $config): string
+    {
+        $region = $this->forge->getRegions()->first->isFor(Arr::get($config, 'config.region'));
+        return $region->getSize(Arr::get($config, 'config.size'))->getId();
+    }
+
+    private function getNextServerName(array $config): string
+    {
+        $namePattern = str_replace('{number}', '\d+', Arr::get($config, 'config.name'));
+        $instance = $this->ec2->getInstances()->filter(function ($instance) use ($namePattern) {
+            return preg_match("/$namePattern/", $instance->getName());
+        })->sortBy->getName()->last();
+
+        $sections = explode('\d+', $namePattern);
+        $number = str_replace($sections, '', $instance->getName());
+        return str_replace('\d+', sprintf('%03d', $number + 1), $namePattern);
+    }
+
+    private function getNetworkedServers(array $config): array
+    {
+        return collect(Arr::get($config, 'network'))->map(function ($server) {
+            return $this->forge->getServer($server)->getId();
+        })->values()->toArray();
+    }
+
+    private function provisionServer(array $config): Server
+    {
+        $params = [
+            'name' => $this->getNextServerName($config),
+            'size' => $this->getServerSize($config),
+            'region' => Arr::get($config, 'config.region'),
+            'php_version' => Arr::get($config, 'config.php_version'),
+            'database_type' => Arr::get($config, 'config.database_type'),
+            'aws_vpc_id' => 'vpc-341f2751',
+            'aws_subnet_id' => 'subnet-bcbfb7e5',
+            'network' => implode(',', $this->getNetworkedServers($config)),
+        ];
+
+        $this->table(array_keys($params), [$params]);
+
+        $params = array_merge($params, [
+            'provider' => 'aws',
+            'credentials' => 21293,
+            'network' => $this->getNetworkedServers($config),
+        ]);
+
+        if (!$this->confirm('Are you sure you want to create this server?')) {
+            exit(1);
+        }
+
+        $this->line('Provisioning a server. This will take a few minutes.');
+        $server = $this->forge->createServer($params);
+        $this->waiter->waitFor(function () use (&$server) {
+            Cache::forget('forge.servers');
+            $server = $this->forge->getServer($server->getName());
+            return !$server->isReady();
+        }, 60);
+        $this->line("Provisioning complete.\n");
+
+        return $server;
+    }
+
+    private function provisionSite(Server $server, array $config): Site
+    {
+        $this->line('Installing site: ' . Arr::get($config, 'config.domain'));
+
+        $site = $this->forge->createSite($server, Arr::get($config, 'config'));
+        $this->waiter->waitFor(function () use ($server, &$site) {
+            $site = $this->forge->getSite($server, $site->getName());
+            return !$site->isInstalled();
+        }, 5);
+
+        $nginx = Storage::disk('nginx')->get(Arr::get($config, 'nginx'));
+        $this->forge->updateNginxConfig($server, $site, $nginx);
+
+        return $site;
     }
 
     /**
@@ -48,49 +149,32 @@ class CreateServer extends Command
 
         $config = config("servers.$service.$type");
 
-        $region = Forge::getRegions()->first->isFor($config['region']);
-        $size = $region->getSize($config['size']);
+        $server = $this->provisionServer($config);
 
-        $namePattern = str_replace('{number}', '\d+', $config['name']);
-        $instance = EC2::getInstances()->filter(function ($instance) use ($namePattern) {
-            return preg_match("/$namePattern/", $instance->getName());
-        })->sortBy->getName()->last();
+        $this->line('Disabling Unlimited');
+        $this->ec2->disableUnlimited([$server->getName()]);
 
-        $sections = explode('\d+', $namePattern);
-        $number = str_replace($sections, '', $instance->getName());
-        $name = str_replace('\d+', sprintf('%03d', $number + 1), $namePattern);
+        $this->line('Adding server tags');
+        $this->ec2->addTags([$server->getName()], $config['tags']);
 
-        $params = [
-            'provider' => 'aws',
-            'credentials' => 21293,
-            'name' => $name,
-            'size' => $size->getId(),
-            'region' => $config['region'],
-            'php_version' => $config['php_version'],
-            'database_type' => $config['database_type'],
-            'aws_vpc_id' => 'vpc-341f2751',
-            'aws_subnet_id' => 'subnet-bcbfb7e5',
-        ];
-        $this->table(array_keys($params), [$params]);
-
-        if (!$this->confirm('Are you sure you want to create this server?')) {
-            return 1;
+        $this->line('Provisioning Sites');
+        $this->forge->deleteSite($server, $this->forge->getSite($server, 'default'));
+        foreach (Arr::get($config, 'sites') as $siteConfig) {
+            $this->provisionSite($server, $siteConfig);
         }
 
-        foreach ($config['sites'] as $site) {
-            [$service, $type] = explode('.', $site);
-            (new SiteConfigUpdater())->addServerToConfig($service, $type, $name);
+        $this->line('Running post provision script');
+        $scripts = Arr::get($config, 'scripts');
+        foreach (Arr::get($config, 'sites') as $siteConfig) {
+            $scripts = array_merge($scripts, Arr::get($siteConfig, 'scripts'));
         }
-        dd($params);
 
-        $this->line('Provisioning a server. This will take a few minutes.');
-        $server = Forge::createServer($params);
+        $scripts = collect($scripts)->map(function ($script) {
+            return new Script($script['script'], $script['arguments']);
+        });
+        $recipe = new Recipe($scripts);
+        $this->forge->runRecipe($server, $recipe);
 
-        while (!$server->isReady()) {
-            sleep(60);
-            Cache::forge('forge.servers');
-            $server = Forge::getServer($server->getName());
-        }
-        $this->line('Provisioning complete.');
+        $this->line('Server provisioning complete.');
     }
 }

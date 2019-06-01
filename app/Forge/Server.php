@@ -15,4 +15,9 @@ class Server extends Entity
     {
         return $this->get('name');
     }
+
+    public function isReady(): bool
+    {
+        return $this->get('is_ready');
+    }
 }
