@@ -6,9 +6,9 @@ use App\Forge\Constants\DatabaseTypes;
 
 return [
     'config' => [
-        'database_type' => DatabaseTypes::NONE,
-        'name' => 'soapbox-web-{number}',
-        'php_version' => PHPVersions::PHP72,
+        'database-type' => DatabaseTypes::NONE,
+        'name' => 'soapbox-web',
+        'php-version' => PHPVersions::PHP72,
         'region' => 'us-west-1',
         'size' => 't3.small',
     ],
@@ -18,15 +18,15 @@ return [
     ],
     'scripts' => [
         [
-            'script' => 'install-datadog-agent',
+            'script' => 'install-datadog-agent.sh',
             'arguments' => [
-                'key' => env(''),
+                'key' => config('services.datadog.key'),
             ],
         ],
         [
-            'script' => 'install-logdna-agent',
+            'script' => 'install-logdna-agent.sh',
             'arguments' => [
-                'key' => env(''),
+                'key' => config('services.logdna.key'),
             ],
         ],
     ],
@@ -43,7 +43,7 @@ return [
             'nginx' => 'soapbox-api-nginx',
             'scripts' => [
                 [
-                    'script' => 'logdna-configure',
+                    'script' => 'logdna-configure.sh',
                     'arguments' => [
                         'directory' => 'api.goodtalk.soapboxhq.com/storage/logs',
                     ],
@@ -77,6 +77,6 @@ return [
     ],
     'tags' => [
         'server-type' => 'api:web',
-        'track-on-datadog' => true,
+        'track-on-datadog' => 'true',
     ],
 ];

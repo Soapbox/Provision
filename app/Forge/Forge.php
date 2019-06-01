@@ -6,6 +6,7 @@ use App\Recipe;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
+use App\Exceptions\ResourceNotFound;
 use Illuminate\Support\Facades\Cache;
 use JSHayes\FakeRequests\ClientFactory;
 
@@ -37,6 +38,11 @@ class Forge
         });
     }
 
+    public function getRegion(string $region): Region
+    {
+        return $this->getRegions()->first->isFor($region);
+    }
+
     public function getServers(): Collection
     {
         return Cache::remember('forge.servers', Carbon::now()->addDay(), function () {
@@ -47,9 +53,15 @@ class Forge
 
     public function getServer(string $serverName): Server
     {
-        return self::getServers()->first(function (Server $server) use ($serverName) {
+        $server = self::getServers()->first(function (Server $server) use ($serverName) {
             return $server->getName() == $serverName;
         });
+
+        if (is_null($server)) {
+            throw new ResourceNotFound();
+        }
+
+        return $server;
     }
 
     public function createServer(array $params): Server

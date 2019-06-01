@@ -23,4 +23,12 @@ return [
         'secret' => env('AWS_SECRET'),
     ],
 
+    'logdna' => [
+        'key' => env('LOGDNA_KEY'),
+    ],
+
+    'datadog' => [
+        'key' => env('DATADOG_KEY'),
+    ],
+
 ];

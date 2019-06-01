@@ -21,9 +21,9 @@ class CreateServerTest extends TestCase
             'test' => [
                 'web' => [
                     'config' => [
-                        'database_type' => DatabaseTypes::NONE,
-                        'name' => 'test-web-{number}',
-                        'php_version' => PHPVersions::PHP72,
+                        'database-type' => DatabaseTypes::NONE,
+                        'name' => 'test-web',
+                        'php-version' => PHPVersions::PHP72,
                         'region' => 'us-west-1',
                         'size' => 't3.small',
                     ],
@@ -286,7 +286,7 @@ class CreateServerTest extends TestCase
                 return $params['content'] == 'test web client nginx file';
             });
 
-        $scripts = Mockery::mock(FileSystem::class);
+        $scripts = Mockery::mock(Filesystem::class);
         Storage::shouldReceive('disk')->with('scripts')->andReturn($scripts);
 
         $scripts->shouldReceive('get')->with('install-datadog-agent')->andReturn('datadog script: {key}');

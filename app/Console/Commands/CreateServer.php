@@ -13,6 +13,8 @@ use Illuminate\Support\Arr;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
+use App\Validators\ServerConfigValidator;
+use Illuminate\Validation\ValidationException;
 
 class CreateServer extends Command
 {
@@ -58,13 +60,13 @@ class CreateServer extends Command
 
     private function getServerSize(array $config): string
     {
-        $region = $this->forge->getRegions()->first->isFor(Arr::get($config, 'config.region'));
+        $region = $this->forge->getRegion(Arr::get($config, 'config.region'));
         return $region->getSize(Arr::get($config, 'config.size'))->getId();
     }
 
     private function getNextServerName(array $config): string
     {
-        $namePattern = str_replace('{number}', '\d+', Arr::get($config, 'config.name'));
+        $namePattern = Arr::get($config, 'config.name') . '-\d+';
         $instance = $this->ec2->getInstances()->filter(function ($instance) use ($namePattern) {
             return preg_match("/$namePattern/", $instance->getName());
         })->sortBy->getName()->last();
@@ -87,8 +89,8 @@ class CreateServer extends Command
             'name' => $this->getNextServerName($config),
             'size' => $this->getServerSize($config),
             'region' => Arr::get($config, 'config.region'),
-            'php_version' => Arr::get($config, 'config.php_version'),
-            'database_type' => Arr::get($config, 'config.database_type'),
+            'php_version' => Arr::get($config, 'config.php-version'),
+            'database_type' => Arr::get($config, 'config.database-type'),
             'aws_vpc_id' => 'vpc-341f2751',
             'aws_subnet_id' => 'subnet-bcbfb7e5',
             'network' => implode(',', $this->getNetworkedServers($config)),
@@ -139,7 +141,7 @@ class CreateServer extends Command
      *
      * @return mixed
      */
-    public function handle()
+    public function handle(ServerConfigValidator $validator)
     {
         $services = array_keys(config('servers'));
         $service = $this->choice('Which service would you like to create a server for?', $services);
@@ -148,6 +150,15 @@ class CreateServer extends Command
         $type = $this->choice('Which server type would you like to create?', $serverTypes);
 
         $config = config("servers.$service.$type");
+
+        try {
+            $validator->validate($config);
+        } catch (ValidationException $e) {
+            $this->error('The config file is invalid.');
+            $this->line(json_encode($e->errors(), JSON_PRETTY_PRINT));
+            return 1;
+        }
+        dd('wat');
 
         $server = $this->provisionServer($config);
 
