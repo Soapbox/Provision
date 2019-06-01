@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Nginx;
 use App\Recipe;
 use App\Script;
 use App\Waiter;
@@ -12,7 +13,6 @@ use App\Forge\Server;
 use Illuminate\Support\Arr;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Storage;
 use App\Validators\ServerConfigValidator;
 use Illuminate\Validation\ValidationException;
 
@@ -130,7 +130,7 @@ class CreateServer extends Command
             return !$site->isInstalled();
         }, 5);
 
-        $nginx = Storage::disk('nginx')->get(Arr::get($config, 'nginx'));
+        $nginx = new Nginx(Arr::get($config, 'nginx'), $site);
         $this->forge->updateNginxConfig($server, $site, $nginx);
 
         return $site;
@@ -158,7 +158,6 @@ class CreateServer extends Command
             $this->line(json_encode($e->errors(), JSON_PRETTY_PRINT));
             return 1;
         }
-        dd('wat');
 
         $server = $this->provisionServer($config);
 

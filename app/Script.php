@@ -19,12 +19,7 @@ class Script
     private function getScriptFromFile(): string
     {
         $code = Storage::disk('scripts')->get($this->script);
-
-        $keys = array_map(function ($key) {
-            return '{' . $key . '}';
-        }, array_keys($this->arguments));
-
-        return str_replace($keys, $this->arguments, $code);
+        return Replacer::replace($code, $this->arguments);
     }
 
     public function getCode(): string

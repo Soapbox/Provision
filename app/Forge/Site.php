@@ -25,4 +25,9 @@ class Site extends Entity
     {
         return $this->get('status') == 'installed';
     }
+
+    public function isWildcard(): bool
+    {
+        return $this->get('wildcards');
+    }
 }

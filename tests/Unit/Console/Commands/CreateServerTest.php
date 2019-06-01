@@ -246,18 +246,19 @@ class CreateServerTest extends TestCase
                 && $params['wildcards'] == false;
         });
 
-        $sites['sites'][] = ['id' => 2, 'name' => 'api.test.soapboxdev.com', 'status' => 'installed'];
+        $sites['sites'][] = ['id' => 2, 'name' => 'api.test.soapboxdev.com', 'status' => 'installed', 'wildcards' => false];
         $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, $sites);
 
         $nginx = Mockery::mock(Filesystem::class);
         Storage::shouldReceive('disk')->with('nginx')->andReturn($nginx);
-        $nginx->shouldReceive('get')->with('test-api-nginx')->andReturn('test api nginx file');
+        $nginx->shouldReceive('exists')->with('test-api-nginx')->andReturn(true);
+        $nginx->shouldReceive('get')->with('test-api-nginx')->andReturn('nginx {{wildcard}}{{name}}');
 
         $handler->expects('put', 'https://forge.laravel.com/api/v1/servers/10/sites/2/nginx')
             ->respondWith(200)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
-                return $params['content'] == 'test api nginx file';
+                return $params['content'] == 'nginx api.test.soapboxdev.com';
             });
 
         $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, [
@@ -274,24 +275,28 @@ class CreateServerTest extends TestCase
                 && $params['wildcards'] == true;
         });
 
-        $sites['sites'][] = ['id' => 3, 'name' => 'soapboxdev.com', 'status' => 'installed'];
+        $sites['sites'][] = ['id' => 3, 'name' => 'soapboxdev.com', 'status' => 'installed', 'wildcards' => true];
         $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, $sites);
 
-        $nginx->shouldReceive('get')->with('test-web-client-nginx')->andReturn('test web client nginx file');
+        $nginx->shouldReceive('exists')->with('test-web-client-nginx')->andReturn(true);
+        $nginx->shouldReceive('get')->with('test-web-client-nginx')->andReturn('nginx {{wildcard}}{{name}}');
 
         $handler->expects('put', 'https://forge.laravel.com/api/v1/servers/10/sites/3/nginx')
             ->respondWith(200)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
-                return $params['content'] == 'test web client nginx file';
+                return $params['content'] == 'nginx .soapboxdev.com';
             });
 
         $scripts = Mockery::mock(Filesystem::class);
         Storage::shouldReceive('disk')->with('scripts')->andReturn($scripts);
 
-        $scripts->shouldReceive('get')->with('install-datadog-agent')->andReturn('datadog script: {key}');
-        $scripts->shouldReceive('get')->with('install-logdna-agent')->andReturn('logdna script: {key}');
-        $scripts->shouldReceive('get')->with('logdna-track-directory')->andReturn('logdna track script: {directory}');
+        $scripts->shouldReceive('exists')->with('install-datadog-agent')->andReturn(true);
+        $scripts->shouldReceive('exists')->with('install-logdna-agent')->andReturn(true);
+        $scripts->shouldReceive('exists')->with('logdna-track-directory')->andReturn(true);
+        $scripts->shouldReceive('get')->with('install-datadog-agent')->andReturn('datadog script: {{key}}');
+        $scripts->shouldReceive('get')->with('install-logdna-agent')->andReturn('logdna script: {{key}}');
+        $scripts->shouldReceive('get')->with('logdna-track-directory')->andReturn('logdna track script: {{directory}}');
 
         $handler->expects('post', 'https://forge.laravel.com/api/v1/recipes')->respondWith(200, [
             'recipe' => ['id' => 1],

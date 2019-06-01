@@ -61,13 +61,13 @@ class ServerConfigValidator
             $script = Storage::disk('scripts')->get($file);
 
             $matches = [];
-            preg_match_all('/\{\w+\}/', $script, $matches);
+            preg_match_all('/\{\{\w+\}\}/', $script, $matches);
             $keys = array_flip(array_map(function ($key) {
                 return trim($key, '{}');
             }, $matches[0]));
 
             if (count($keys) != count($value['arguments']) || !empty(array_diff_key($keys, $value['arguments']))) {
-                $fail("$attribute does not have valid arguments.");
+                $fail("$file does not have valid arguments.");
             }
         };
     }

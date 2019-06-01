@@ -2,6 +2,7 @@
 
 namespace App\Forge;
 
+use App\Nginx;
 use App\Recipe;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
@@ -101,9 +102,11 @@ class Forge
         Cache::forget("servers.{$server->getId()}.sites");
     }
 
-    public function updateNginxConfig(Server $server, Site $site, string $nginx): void
+    public function updateNginxConfig(Server $server, Site $site, Nginx $nginx): void
     {
-        $this->client->put("servers/{$server->getId()}/sites/{$site->getId()}/nginx", ['json' => ['content' => $nginx]]);
+        $this->client->put("servers/{$server->getId()}/sites/{$site->getId()}/nginx", ['json' => [
+            'content' => (string) $nginx,
+        ]]);
     }
 
     public function runRecipe(Server $server, Recipe $recipe): void

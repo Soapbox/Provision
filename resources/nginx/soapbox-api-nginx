@@ -1,0 +1,57 @@
+# FORGE CONFIG (DO NOT REMOVE!)
+include forge-conf/{{name}}/before/*;
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name {{wildcard}}{{name}};
+    root /home/forge/{{name}}/current/public;
+
+    # FORGE SSL (DO NOT REMOVE!)
+    # ssl_certificate;
+    # ssl_certificate_key;
+
+    ssl_protocols TLSv1.2;
+    ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512:ECDHE-RSA-AES256-GCM-SHA384:DHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-SHA384;
+    ssl_prefer_server_ciphers on;
+    ssl_dhparam /etc/nginx/dhparams.pem;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-XSS-Protection "1; mode=block";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.html index.htm index.php;
+
+    charset utf-8;
+
+    # FORGE CONFIG (DO NOT REMOVE!)
+    include forge-conf/{{name}}/server/*;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    access_log off;
+    error_log  /var/log/nginx/{{name}}-error.log error;
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_split_path_info ^(.+\.php)(/.+)$;
+        fastcgi_pass unix:/var/run/php/php7.2-fpm.sock;
+        fastcgi_index index.php;
+        include fastcgi_params;
+
+        fastcgi_param DD_SERVICE_NAME "soapbox-api";
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+
+# FORGE CONFIG (DO NOT REMOVE!)
+include forge-conf/{{name}}/after/*;
