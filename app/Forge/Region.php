@@ -12,6 +12,11 @@ class Region extends Entity
         return $this->get('id');
     }
 
+    public function getName(): string
+    {
+        return $this->get('name');
+    }
+
     public function isFor(string $region): bool
     {
         return $this->getId() == $region;
