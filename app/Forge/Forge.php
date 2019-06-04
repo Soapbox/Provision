@@ -6,6 +6,7 @@ use App\Nginx;
 use App\Recipe;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
+use App\WorkerConfiguration;
 use Illuminate\Support\Collection;
 use App\Exceptions\ResourceNotFound;
 use Illuminate\Support\Facades\Cache;
@@ -75,10 +76,11 @@ class Forge
 
     public function getSites(Server $server): Collection
     {
-        $serverId = $server->getId();
-        return Cache::remember("forge.server.{$serverId}.sites", Carbon::now()->addDay(), function () use ($serverId) {
-            $response = json_decode($this->client->get("servers/$serverId/sites")->getBody(), true);
-            return collect(Arr::get($response, 'sites'))->mapInto(Site::class);
+        return Cache::remember("forge.server.{$server->getId()}.sites", Carbon::now()->addDay(), function () use ($server) {
+            $response = json_decode($this->client->get("servers/{$server->getId()}/sites")->getBody(), true);
+            return collect(Arr::get($response, 'sites'))->map(function ($site) use ($server) {
+                return new Site($site, $server);
+            });
         });
     }
 
@@ -93,17 +95,19 @@ class Forge
     {
         $response = $this->client->post("servers/{$server->getId()}/sites", ['json' => $params]);
         Cache::forget("forge.server.{$server->getId()}.sites");
-        return new Site(json_decode($response->getBody(), true)['site']);
+        return new Site(json_decode($response->getBody(), true)['site'], $server);
     }
 
-    public function deleteSite(Server $server, Site $site): void
+    public function deleteSite(Site $site): void
     {
+        $server = $site->getServer();
         $this->client->delete("servers/{$server->getId()}/sites/{$site->getId()}");
         Cache::forget("servers.{$server->getId()}.sites");
     }
 
-    public function updateNginxConfig(Server $server, Site $site, Nginx $nginx): void
+    public function updateNginxConfig(Site $site, Nginx $nginx): void
     {
+        $server = $site->getServer();
         $this->client->put("servers/{$server->getId()}/sites/{$site->getId()}/nginx", ['json' => [
             'content' => (string) $nginx,
         ]]);
@@ -126,5 +130,47 @@ class Forge
                 'servers' => [$server->getId()],
             ],
         ]);
+    }
+
+    public function getWorkers(Site $site): Collection
+    {
+        $server = $site->getServer();
+        return Cache::remember(
+            "forge.server.{$server->getId()}.sites.{$site->getId()}.workers",
+            Carbon::now()->addDay(),
+            function () use ($server, $site) {
+                $response = $this->client->get("servers/{$server->getId()}/sites/{$site->getId()}/workers");
+                $response = json_decode($response->getBody(), true);
+                return collect(Arr::get($response, 'workers'))->map(function ($worker) use ($site) {
+                    return new Worker($worker, $site);
+                });
+            }
+        );
+    }
+
+    public function createWorker(Site $site, WorkerConfiguration $worker): void
+    {
+        $server = $site->getServer();
+        $this->client->post("servers/{$server->getId()}/sites/{$site->getId()}/workers", [
+            'json' => [
+                'queue' => $worker->getQueue(),
+                'connection' => $worker->getConnection(),
+                'timeout' => $worker->getTimeout(),
+                'sleep' => $worker->getSleep(),
+                'tries' => $worker->getTries(),
+                'delay' => $worker->getDelay(),
+                'processes' => $worker->getProcesses(),
+                'daemon' => $worker->isDaemon(),
+            ],
+        ]);
+        Cache::forget("forge.server.{$server->getId()}.sites.{$site->getId()}.workers");
+    }
+
+    public function deleteWorker(Worker $worker): void
+    {
+        $site = $worker->getSite();
+        $server = $site->getServer();
+        $this->client->delete("servers/{$server->getId()}/sites/{$site->getId()}/workers/{$worker->getId()}");
+        Cache::forget("forge.server.{$server->getId()}.sites.{$site->getId()}.workers");
     }
 }

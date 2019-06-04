@@ -131,7 +131,7 @@ class CreateServer extends Command
         }, 5);
 
         $nginx = new Nginx(Arr::get($config, 'nginx'), $site);
-        $this->forge->updateNginxConfig($server, $site, $nginx);
+        $this->forge->updateNginxConfig($site, $nginx);
 
         return $site;
     }
@@ -168,7 +168,7 @@ class CreateServer extends Command
         $this->ec2->addTags([$server->getName()], $config['tags']);
 
         $this->line('Provisioning Sites');
-        $this->forge->deleteSite($server, $this->forge->getSite($server, 'default'));
+        $this->forge->deleteSite($this->forge->getSite($server, 'default'));
         foreach (Arr::get($config, 'sites') as $siteConfig) {
             $this->provisionSite($server, $siteConfig);
         }

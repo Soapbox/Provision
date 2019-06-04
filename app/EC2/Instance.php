@@ -15,4 +15,9 @@ class Instance extends Entity
     {
         return $this->get('InstanceId');
     }
+
+    public function getInstanceType(): string
+    {
+        return $this->get('InstanceType');
+    }
 }
