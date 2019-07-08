@@ -9,7 +9,7 @@ return [
     ],
     'balancing' => [
         [
-            'server-size' => 't2.medium',
+            'server-size' => ServerSizes::T2_MEDIUM,
             'max-processes' => 20,
         ],
         [
@@ -110,6 +110,16 @@ return [
             'failed-job-delay' => 0,
             'processes' => 2,
             'maximum-tries' => 10,
+            'daemon' => true,
+        ],
+        [
+            'queue' => 'api-classification',
+            'connection' => 'sqs',
+            'timeout' => 240,
+            'sleep' => 0,
+            'failed-job-delay' => 0,
+            'processes' => 3,
+            'maximum-tries' => 3,
             'daemon' => true,
         ],
     ],

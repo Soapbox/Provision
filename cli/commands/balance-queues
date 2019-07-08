@@ -1,0 +1,7 @@
+#!/bin/bash
+
+DESCRIPTION="This is an example description"
+
+source `dirname ${BASH_SOURCE[0]}`/../pull-latest
+
+php artisan queues:balance

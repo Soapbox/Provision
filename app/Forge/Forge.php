@@ -40,7 +40,7 @@ class Forge
         });
     }
 
-    public function getRegion(string $region): Region
+    public function getRegion(string $region): ?Region
     {
         return $this->getRegions()->first->isFor($region);
     }
@@ -50,6 +50,14 @@ class Forge
         return Cache::remember('forge.servers', Carbon::now()->addDay(), function () {
             $response = json_decode($this->client->get('servers')->getBody(), true);
             return collect(Arr::get($response, 'servers'))->mapInto(Server::class);
+        });
+    }
+
+    public function getServersByPattern(string $pattern): Collection
+    {
+        $pattern = '/' . trim($pattern, '/') . '/';
+        return $this->getServers()->filter(function (Server $server) use ($pattern) {
+            return preg_match($pattern, $server->getName());
         });
     }
 
@@ -74,6 +82,13 @@ class Forge
         return new Server(Arr::get(json_decode($response->getBody(), true), 'server'));
     }
 
+    public function updateServer(Server $server, array $params): Server
+    {
+        $response = $this->client->put("servers/{$server->getId()}", ['json' => $params]);
+        Cache::forget('forge.servers');
+        return new Server(Arr::get(json_decode($response->getBody(), true), 'server'));
+    }
+
     public function getSites(Server $server): Collection
     {
         return Cache::remember("forge.server.{$server->getId()}.sites", Carbon::now()->addDay(), function () use ($server) {
@@ -84,7 +99,7 @@ class Forge
         });
     }
 
-    public function getSite(Server $server, string $name): Site
+    public function getSite(Server $server, string $name): ?Site
     {
         return $this->getSites($server)->first(function ($site) use ($name) {
             return $site->getName() == $name;

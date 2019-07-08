@@ -117,6 +117,10 @@ class CreateServer extends Command
         }, 60);
         $this->line("Provisioning complete.\n");
 
+        $this->forge->updateServer($server, [
+            'max_upload_size' => Arr::get($config, 'config.max-upload-size'),
+        ]);
+
         return $server;
     }
 
@@ -130,8 +134,10 @@ class CreateServer extends Command
             return !$site->isInstalled();
         }, 5);
 
-        $nginx = new Nginx(Arr::get($config, 'nginx'), $site);
-        $this->forge->updateNginxConfig($site, $nginx);
+        $nginx = Arr::get($config, 'nginx');
+        if (!empty($nginx)) {
+            $this->forge->updateNginxConfig($site, new Nginx($nginx, $site));
+        }
 
         return $site;
     }
@@ -154,6 +160,7 @@ class CreateServer extends Command
         try {
             $validator->validate($config);
         } catch (ValidationException $e) {
+            throw new \Exception(json_encode($e->errors(), JSON_PRETTY_PRINT));
             $this->error('The config file is invalid.');
             $this->line(json_encode($e->errors(), JSON_PRETTY_PRINT));
             return 1;

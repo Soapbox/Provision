@@ -13,6 +13,7 @@ return [
         'php-version' => PHPVersions::PHP72,
         'region' => Regions::N_CALIFORNIA,
         'size' => ServerSizes::T3_SMALL,
+        'max-upload-size' => 10,
     ],
     'network' => [
         'database-001',
@@ -45,7 +46,6 @@ return [
                 'directory' => '/public/current',
                 'wildcards' => false,
             ],
-            'load-balance' => true,
             'nginx' => 'soapbox-api-nginx',
             'scripts' => [
                 [
@@ -64,7 +64,6 @@ return [
                 'directory' => '/current/dist-production',
                 'wildcards' => true,
             ],
-            'load-balance' => true,
             'nginx' => 'soapbox-web-client-nginx',
             'scripts' => [],
         ],
@@ -76,7 +75,6 @@ return [
                 'directory' => '/current/dist-production',
                 'wildcards' => true,
             ],
-            'load-balance' => true,
             'nginx' => 'soapbox-web-client-nginx',
             'scripts' => [],
         ],

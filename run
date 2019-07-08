@@ -1,0 +1,25 @@
+#!/bin/bash
+
+usage() {
+    printf "\e[33mAvailable commands:\e[39m\n"
+    for command in ./cli/commands/*; do
+        description=`grep DESCRIPTION $command | sed 's/DESCRIPTION="\(.*\)"/\1/'`
+        printf " \e[32m%-24s\e[39m%s\n" `basename $command` "$description"
+    done
+    exit 0
+}
+
+cd `dirname $0`
+
+if [ $# = 0 ]; then
+    usage
+fi
+
+if [ -f ./cli/commands/$1 ]; then
+    command=$1
+    shift
+    ./cli/commands/$command "$@"
+else
+    printf "Command $1 not found\n\n"
+    usage
+fi

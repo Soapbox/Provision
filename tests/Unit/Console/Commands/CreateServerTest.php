@@ -26,6 +26,7 @@ class CreateServerTest extends TestCase
                         'php-version' => PHPVersions::PHP72,
                         'region' => 'us-west-1',
                         'size' => 't3.small',
+                        'max-upload-size' => 10,
                     ],
                     'network' => [
                         'test-database-001',
@@ -73,6 +74,17 @@ class CreateServerTest extends TestCase
                                 'wildcards' => true,
                             ],
                             'nginx' => 'test-web-client-nginx',
+                            'scripts' => [],
+                        ],
+                        [
+                            'config' => [
+                                'domain' => 'no-nginx.soapboxdev.com',
+                                'type' => SiteTypes::HTML,
+                                'aliases' => [],
+                                'directory' => '/current/dist-production',
+                                'wildcards' => true,
+                            ],
+                            'nginx' => null,
                             'scripts' => [],
                         ],
                     ],
@@ -198,6 +210,16 @@ class CreateServerTest extends TestCase
 
         $handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(200, $servers);
 
+        $handler->expects('put', 'https://forge.laravel.com/api/v1/servers/10')->respondWith(200, [
+            'server' => [
+                'id' => 10,
+                'name' => 'test-web-005',
+            ],
+        ])->when(function ($request) {
+            $params = json_decode($request->getBody(), true);
+            return $params['max_upload_size'] == 10;
+        });
+
         $instances[] = ['id' => 'i-5', 'name' => 'test-web-005'];
         $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(
             200,
@@ -287,6 +309,23 @@ class CreateServerTest extends TestCase
                 $params = json_decode($request->getBody(), true);
                 return $params['content'] == 'nginx .soapboxdev.com';
             });
+
+        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, [
+            'site' => [
+                'id' => 4,
+                'name' => 'no-nginx.soapboxdev.com',
+            ],
+        ])->when(function ($request) {
+            $params = json_decode($request->getBody(), true);
+            return $params['domain'] == 'no-nginx.soapboxdev.com'
+                && $params['type'] == 'html'
+                && $params['aliases'] == []
+                && $params['directory'] == '/current/dist-production'
+                && $params['wildcards'] == true;
+        });
+
+        $sites['sites'][] = ['id' => 4, 'name' => 'no-nginx.soapboxdev.com', 'status' => 'installed', 'wildcards' => true];
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, $sites);
 
         $scripts = Mockery::mock(Filesystem::class);
         Storage::shouldReceive('disk')->with('scripts')->andReturn($scripts);

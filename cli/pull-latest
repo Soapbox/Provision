@@ -1,0 +1,15 @@
+#!/bin/bash
+
+if [[ -n $(git status -s) ]]; then
+    printf "\e[31mYou have local changes. Make sure your local changes are committed first!\e[39m\n"
+    exit 1
+fi
+
+git pull
+
+exitCode=$?
+if [ $exitCode != 0 ]; then
+    printf "\e[31mThere was an issue pulling the latest code from GitHub.\e[39m\n"
+    exit $exitCode
+fi
+

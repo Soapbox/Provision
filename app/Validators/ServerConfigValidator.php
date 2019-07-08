@@ -22,7 +22,7 @@ class ServerConfigValidator
     private function validateRegion(): Closure
     {
         return function ($attribute, $value, $fail) {
-            if (!$this->forge->getRegions()->map->getId()->contains($value)) {
+            if (!$this->forge->getRegion($value)) {
                 $fail("$value is not a valid region");
             }
         };
@@ -32,7 +32,7 @@ class ServerConfigValidator
     {
         return function ($attribute, $value, $fail) use ($region) {
             $region = $this->forge->getRegion($region);
-            if (!$region->getSizes()->map->getSize()->contains($value)) {
+            if ($region && !$region->getSizes()->map->getSize()->contains($value)) {
                 $fail("$value is not a valid size");
             }
         };
@@ -75,7 +75,7 @@ class ServerConfigValidator
     private function validateNginxFile(): Closure
     {
         return function ($attribute, $value, $fail) {
-            if (!Storage::disk('nginx')->exists($value)) {
+            if (!is_null($value) && !Storage::disk('nginx')->exists($value)) {
                 $fail("$value is not a valid nginx file.");
                 return;
             }
@@ -101,6 +101,7 @@ class ServerConfigValidator
             'config.php-version' => 'required|in:php56,php70,php71,php72,php73',
             'config.region' => ['required', $this->validateRegion()],
             'config.size' => ['required', $this->validateSize(Arr::get($config, 'config.region', ''))],
+            'config.max-upload-size' => 'present|int|min:1|nullable',
             'network' => 'present|array',
             'network.*' => ['required', 'string', $this->validateServer()],
             'scripts' => 'present|array',
@@ -116,7 +117,7 @@ class ServerConfigValidator
             'sites.*.config.aliases.*' => 'required|string',
             'sites.*.config.directory' => 'required|string',
             'sites.*.config.wildcards' => 'required|boolean',
-            'sites.*.nginx' => ['required', $this->validateNginxFile()],
+            'sites.*.nginx' => ['present', $this->validateNginxFile()],
             'sites.*.scripts' => 'present|array',
             'sites.*.scripts.*.script' => 'required',
             'sites.*.scripts.*.arguments' => 'present|array',

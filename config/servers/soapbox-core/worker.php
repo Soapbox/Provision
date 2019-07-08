@@ -11,6 +11,7 @@ return [
         'php_version' => PHPVersions::PHP72,
         'region' => 'us-west-1',
         'size' => 't3.medium',
+        'max-upload-size' => null,
     ],
     'network' => [
         'database-001',
@@ -20,13 +21,13 @@ return [
         [
             'script' => 'install-datadog-agent',
             'arguments' => [
-                'key' => env(''),
+                'key' => config('services.datadog.key'),
             ],
         ],
         [
             'script' => 'install-logdna-agent',
             'arguments' => [
-                'key' => env(''),
+                'key' => config('services.logdna.key'),
             ],
         ],
     ],
@@ -40,7 +41,7 @@ return [
                 'wildcards' => false,
             ],
             'load-balance' => false,
-            'nginx' => 'soapbox-api-nginx',
+            'nginx' => null,
             'scripts' => [
                 [
                     'script' => 'logdna-configure',

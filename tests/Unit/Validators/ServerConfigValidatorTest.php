@@ -25,6 +25,7 @@ class ServerConfigValidatorTest extends TestCase
             'php-version' => PHPVersions::PHP72,
             'region' => 'us-west-1',
             'size' => 't3.small',
+            'max-upload-size' => 10,
         ],
         'network' => [],
         'scripts' => [],
@@ -92,6 +93,19 @@ class ServerConfigValidatorTest extends TestCase
     {
         parent::setUp();
         $this->handler = $this->fakeRequests();
+        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(200, [
+            'regions' => [
+                'aws' => [
+                    [
+                        'id' => 'us-west-1',
+                        'sizes' => [
+                            ['id' => 0, 'size' => 't3.small'],
+                            ['id' => 1, 'size' => 't3.medium'],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
         $this->validScripts = [];
         $this->validNginxFiles = ['valid-nginx'];
 
@@ -121,6 +135,7 @@ class ServerConfigValidatorTest extends TestCase
      */
     public function the_config_key_is_required()
     {
+        $this->fakeRequests();
         $this->assertIsNotValid($this->without(['config']));
     }
 
@@ -158,7 +173,7 @@ class ServerConfigValidatorTest extends TestCase
     /**
      * @test
      */
-    public function is_passes_validation_when_the_config_php_version_is_correct()
+    public function it_passes_validation_when_the_config_php_version_is_correct()
     {
         $this->assertIsValid($this->overwrite(['config.php-version' => 'php56']));
         $this->assertIsValid($this->overwrite(['config.php-version' => 'php70']));
@@ -173,9 +188,9 @@ class ServerConfigValidatorTest extends TestCase
     /**
      * @test
      */
-    public function is_passes_validation_when_the_config_region_is_correct()
+    public function it_passes_validation_when_the_config_region_is_correct()
     {
-        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(200, [
+        $this->fakeRequests()->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(200, [
             'regions' => [
                 'aws' => [
                     [
@@ -206,9 +221,9 @@ class ServerConfigValidatorTest extends TestCase
     /**
      * @test
      */
-    public function is_passes_validation_when_the_config_size_is_correct()
+    public function it_passes_validation_when_the_config_size_is_correct()
     {
-        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(200, [
+        $this->fakeRequests()->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(200, [
             'regions' => [
                 'aws' => [
                     [
@@ -236,6 +251,18 @@ class ServerConfigValidatorTest extends TestCase
     /**
      * @test
      */
+    public function it_passes_validation_when_the_max_upload_size_is_valid()
+    {
+        $this->assertIsValid($this->overwrite(['config.max-upload-size' => 1]));
+        $this->assertIsValid($this->overwrite(['config.max-upload-size' => 100]));
+        $this->assertIsValid($this->overwrite(['config.max-upload-size' => null]));
+        $this->assertIsNotValid($this->overwrite(['config.max-upload-size' => 'test']));
+        $this->assertIsNotValid($this->overwrite(['config.max-upload-size' => 0]));
+    }
+
+    /**
+     * @test
+     */
     public function it_passes_validation_when_the_network_is_contains_only_valid_servers()
     {
         $this->handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(200, [
@@ -256,7 +283,7 @@ class ServerConfigValidatorTest extends TestCase
      */
     public function it_passes_validation_when_the_scripts_contains_valid_script_configurations()
     {
-        $this->fakeScript('valid-script', 'Script {key1} and {key2}');
+        $this->fakeScript('valid-script', 'Script {{key1}} and {{key2}}');
         $this->assertIsValid($this->overwrite(['scripts' => []]));
         $this->assertIsValid($this->overwrite(['scripts' => [[
             'script' => 'valid-script',
@@ -379,9 +406,9 @@ class ServerConfigValidatorTest extends TestCase
     public function it_passes_validation_when_the_sites_nginx_is_valid()
     {
         $this->assertIsValid($this->overwrite(['sites.0.nginx' => 'valid-nginx']));
+        $this->assertIsValid($this->overwrite(['sites.0.nginx' => null]));
+        $this->assertIsValid($this->overwrite(['sites.0.nginx' => '']));
         $this->assertIsNotValid($this->overwrite(['sites.0.nginx' => 'invalid-nginx']));
-        $this->assertIsNotValid($this->overwrite(['sites.0.nginx' => '']));
-        $this->assertIsNotValid($this->overwrite(['sites.0.nginx' => null]));
         $this->assertIsNotValid($this->without(['sites.0.nginx']));
     }
 
@@ -390,7 +417,7 @@ class ServerConfigValidatorTest extends TestCase
      */
     public function it_passes_validation_when_the_sites_scripts_contains_valid_script_configurations()
     {
-        $this->fakeScript('valid-script', 'Script {key1} and {key2}');
+        $this->fakeScript('valid-script', 'Script {{key1}} and {{key2}}');
         $this->assertIsValid($this->overwrite(['sites.0.scripts' => []]));
         $this->assertIsValid($this->overwrite(['sites.0.scripts' => [[
             'script' => 'valid-script',
