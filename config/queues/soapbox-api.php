@@ -118,7 +118,7 @@ return [
             'timeout' => 240,
             'sleep' => 0,
             'failed-job-delay' => 0,
-            'processes' => 3,
+            'processes' => 2,
             'maximum-tries' => 3,
             'daemon' => true,
         ],
