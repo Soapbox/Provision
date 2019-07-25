@@ -41,7 +41,7 @@ return [
         [
             'config' => [
                 'domain' => 'api.goodtalk.soapboxhq.com',
-                'project-type' => SiteTypes::PHP,
+                'type' => SiteTypes::PHP,
                 'aliases' => [],
                 'directory' => '/public/current',
                 'wildcards' => false,
@@ -59,7 +59,7 @@ return [
         [
             'config' => [
                 'domain' => 'soapboxhq.com',
-                'project-type' => SiteTypes::HTML,
+                'type' => SiteTypes::HTML,
                 'aliases' => [],
                 'directory' => '/current/dist-production',
                 'wildcards' => true,
@@ -70,7 +70,7 @@ return [
         [
             'config' => [
                 'domain' => 'goodtalk.soapboxhq.com',
-                'project-type' => SiteTypes::HTML,
+                'type' => SiteTypes::HTML,
                 'aliases' => [],
                 'directory' => '/current/dist-production',
                 'wildcards' => true,

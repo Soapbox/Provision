@@ -6,9 +6,9 @@ use App\Forge\Constants\DatabaseTypes;
 
 return [
     'config' => [
-        'database_type' => DatabaseTypes::NONE,
-        'name' => 'goodtalk-worker-{number}',
-        'php_version' => PHPVersions::PHP72,
+        'database-type' => DatabaseTypes::NONE,
+        'name' => 'goodtalk-worker',
+        'php-version' => PHPVersions::PHP72,
         'region' => 'us-west-1',
         'size' => 't3.medium',
         'max-upload-size' => null,
@@ -19,15 +19,15 @@ return [
     ],
     'scripts' => [
         [
-            'script' => 'install-datadog-agent',
+            'script' => 'install-datadog-agent.sh',
             'arguments' => [
-                'key' => config('services.datadog.key'),
+                'key' => env('DATADOG_KEY'),
             ],
         ],
         [
-            'script' => 'install-logdna-agent',
+            'script' => 'install-logdna-agent.sh',
             'arguments' => [
-                'key' => config('services.logdna.key'),
+                'key' => env('LOGDNA_KEY'),
             ],
         ],
     ],
@@ -44,10 +44,9 @@ return [
             'nginx' => null,
             'scripts' => [
                 [
-                    'script' => 'logdna-configure',
+                    'script' => 'logdna-configure.sh',
                     'arguments' => [
                         'directory' => 'api.goodtalk.soapboxhq.com/storage/logs',
-                        'tags' => 'api,worker',
                     ],
                 ],
             ],
@@ -55,6 +54,6 @@ return [
     ],
     'tags' => [
         'server-type' => 'api:worker',
-        'track-on-datadog' => true,
+        'track-on-datadog' => 'true',
     ],
 ];
