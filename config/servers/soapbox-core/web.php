@@ -23,13 +23,13 @@ return [
         [
             'script' => 'install-datadog-agent.sh',
             'arguments' => [
-                'key' => config('services.datadog.key'),
+                'key' => env('DATADOG_KEY'),
             ],
         ],
         [
             'script' => 'install-logdna-agent.sh',
             'arguments' => [
-                'key' => config('services.logdna.key'),
+                'key' => env('LOGDNA_KEY'),
             ],
         ],
         [
@@ -41,7 +41,7 @@ return [
         [
             'config' => [
                 'domain' => 'api.goodtalk.soapboxhq.com',
-                'type' => SiteTypes::PHP,
+                'project-type' => SiteTypes::PHP,
                 'aliases' => [],
                 'directory' => '/public/current',
                 'wildcards' => false,
@@ -59,7 +59,7 @@ return [
         [
             'config' => [
                 'domain' => 'soapboxhq.com',
-                'type' => SiteTypes::HTML,
+                'project-type' => SiteTypes::HTML,
                 'aliases' => [],
                 'directory' => '/current/dist-production',
                 'wildcards' => true,
@@ -70,7 +70,7 @@ return [
         [
             'config' => [
                 'domain' => 'goodtalk.soapboxhq.com',
-                'type' => SiteTypes::HTML,
+                'project-type' => SiteTypes::HTML,
                 'aliases' => [],
                 'directory' => '/current/dist-production',
                 'wildcards' => true,

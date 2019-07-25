@@ -100,7 +100,7 @@ class CreateServer extends Command
 
         $params = array_merge($params, [
             'provider' => 'aws',
-            'credentials' => 21293,
+            'credential_id' => 21293,
             'network' => $this->getNetworkedServers($config),
         ]);
 
@@ -119,6 +119,7 @@ class CreateServer extends Command
 
         $this->forge->updateServer($server, [
             'max_upload_size' => Arr::get($config, 'config.max-upload-size'),
+            'network' => $this->getNetworkedServers($config),
         ]);
 
         return $server;
@@ -128,8 +129,16 @@ class CreateServer extends Command
     {
         $this->line('Installing site: ' . Arr::get($config, 'config.domain'));
 
-        $site = $this->forge->createSite($server, Arr::get($config, 'config'));
+        $params = [
+            'domain' => Arr::get($config, 'config.domain'),
+            'project_type' => Arr::get($config, 'config.type'),
+            'aliases' => Arr::get($config, 'config.aliases'),
+            'directory' => Arr::get($config, 'config.directory'),
+            'wildcards' => Arr::get($config, 'config.wildcards'),
+        ];
+        $site = $this->forge->createSite($server, $params);
         $this->waiter->waitFor(function () use ($server, &$site) {
+            Cache::forget("forge.server.{$server->getId()}.sites");
             $site = $this->forge->getSite($server, $site->getName());
             return !$site->isInstalled();
         }, 5);

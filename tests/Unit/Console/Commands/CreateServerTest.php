@@ -262,7 +262,7 @@ class CreateServerTest extends TestCase
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
             return $params['domain'] == 'api.test.soapboxdev.com'
-                && $params['type'] == 'php'
+                && $params['project_type'] == 'php'
                 && $params['aliases'] == []
                 && $params['directory'] == '/public/current'
                 && $params['wildcards'] == false;
@@ -291,7 +291,7 @@ class CreateServerTest extends TestCase
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
             return $params['domain'] == 'soapboxdev.com'
-                && $params['type'] == 'html'
+                && $params['project_type'] == 'html'
                 && $params['aliases'] == []
                 && $params['directory'] == '/current/dist-production'
                 && $params['wildcards'] == true;
@@ -318,7 +318,7 @@ class CreateServerTest extends TestCase
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
             return $params['domain'] == 'no-nginx.soapboxdev.com'
-                && $params['type'] == 'html'
+                && $params['project_type'] == 'html'
                 && $params['aliases'] == []
                 && $params['directory'] == '/current/dist-production'
                 && $params['wildcards'] == true;
