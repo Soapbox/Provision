@@ -11,6 +11,8 @@ use App\WorkerConfiguration;
 use App\Queues\Balancing\Rule;
 use Illuminate\Console\Command;
 use App\Queues\Balancing\Balancer;
+use App\Validators\QueueConfigValidator;
+use Illuminate\Validation\ValidationException;
 
 class BalanceQueues extends Command
 {
@@ -33,12 +35,21 @@ class BalanceQueues extends Command
      *
      * @return mixed
      */
-    public function handle(Forge $forge, SQS $sqs, EC2 $ec2)
+    public function handle(Forge $forge, SQS $sqs, EC2 $ec2, QueueConfigValidator $validator)
     {
         $services = array_keys(config('queues'));
         $service = $this->choice('Which service would you like to balance queues for?', $services);
 
         $config = config("queues.$service");
+
+        try {
+            $validator->validate($config);
+        } catch (ValidationException $e) {
+            throw new \Exception(json_encode($e->errors(), JSON_PRETTY_PRINT));
+            $this->error('The config file is invalid.');
+            $this->line(json_encode($e->errors(), JSON_PRETTY_PRINT));
+            return 1;
+        }
 
         $queues = collect(Arr::get($config, 'queues'))->keyBy('queue');
         $queueUrls = $sqs->listQueues()->keyBy(function ($url) {
