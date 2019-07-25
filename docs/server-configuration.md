@@ -7,7 +7,7 @@ servers
     └ {service-name}
         └ {server-type}.php
 ```
-Where `{service-name}` is some name given to the service. For exmaple, `soapbox-core` could be the service name given to the servers that will run API and the frontend. `{server-type}` is the type of server, for example `web` or `worker`.
+Where `{service‑name}` is some name given to the service. For exmaple, `soapbox-core` could be the service name given to the servers that will run API and the frontend. `{server‑type}` is the type of server, for example `web` or `worker`.
 
 ## Configuration File
 ### Root Object
@@ -42,9 +42,9 @@ return [
 
 | Field         | Type   | Description                                                                                                                            |
 | ------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| database-type | string | This is the database type to provision with the server. Check `App\Forge\Constants\DatabaseTypes` for possible values.                 |
+| database‑type | string | This is the database type to provision with the server. Check `App\Forge\Constants\DatabaseTypes` for possible values.                 |
 | name          | string | The name prefix for the server. This will be appended with an auto incrementing number.                                                |
-| php-version   | string | The version of php to use. Check `\App\Forge\Constants\PHPVersions` for possible values.                                               |
+| php‑version   | string | The version of php to use. Check `\App\Forge\Constants\PHPVersions` for possible values.                                               |
 | region        | string | The region to create the server in. Our stack should be in North California. Check `\App\Forge\Constants\Regions` for possible values. |
 | size          | string | The size of the server. Check `\App\Forge\Constants\ServerSizes` for possible values.                                                  |
 
