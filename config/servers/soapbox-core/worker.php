@@ -3,15 +3,17 @@
 use App\Forge\Constants\SiteTypes;
 use App\Forge\Constants\PHPVersions;
 use App\Forge\Constants\DatabaseTypes;
+use App\Forge\Constants\Regions;
+use App\Forge\Constants\ServerSizes;
 
 return [
     'config' => [
         'database-type' => DatabaseTypes::NONE,
         'name' => 'goodtalk-worker',
         'php-version' => PHPVersions::PHP72,
-        'region' => 'us-west-1',
-        'size' => 't3.medium',
-        'max-upload-size' => null,
+        'region' => Regions::N_CALIFORNIA,
+        'size' => ServerSizes::T3_SMALL,
+        'max-upload-size' => 10,
     ],
     'network' => [
         'database-001',
