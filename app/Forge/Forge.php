@@ -79,7 +79,17 @@ class Forge
         $response = $this->client->post('servers', ['json' => $params]);
         Cache::forget('forge.servers');
         Cache::forget('ec2.instances');
+
+        $this->saveServerMeta($response);
+
         return new Server(Arr::get(json_decode($response->getBody(), true), 'server'));
+    }
+
+    private function saveServerMeta($response)
+    {
+        $filename = 'Provision-' . Carbon::now()->format('Y-m-d-H-i-s');
+
+        file_put_contents(storage_path() . '/' . $filename, $response->getBody());
     }
 
     public function updateServer(Server $server, array $params): Server

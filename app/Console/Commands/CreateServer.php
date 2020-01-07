@@ -202,5 +202,6 @@ class CreateServer extends Command
         $this->forge->runRecipe($server, $recipe);
 
         $this->line('Server provisioning complete.');
+        $this->line('See https://github.com/Soapbox/Provision/wiki/Additional-Steps for the remaining manual steps');
     }
 }
