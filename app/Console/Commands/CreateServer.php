@@ -71,6 +71,10 @@ class CreateServer extends Command
             return preg_match("/$namePattern/", $instance->getName());
         })->sortBy->getName()->last();
 
+        if (is_null($instance)) {
+            return str_replace('\d+', sprintf('%03d', 1), $namePattern);
+        }
+
         $sections = explode('\d+', $namePattern);
         $number = str_replace($sections, '', $instance->getName());
         return str_replace('\d+', sprintf('%03d', $number + 1), $namePattern);
