@@ -12,7 +12,7 @@ return [
         'name' => 'soapbox-web',
         'php-version' => PHPVersions::PHP72,
         'region' => Regions::N_CALIFORNIA,
-        'size' => ServerSizes::T3_SMALL,
+        'size' => ServerSizes::T3_MEDIUM,
         'max-upload-size' => 10,
     ],
     'network' => [
@@ -43,7 +43,7 @@ return [
                 'domain' => 'api.goodtalk.soapboxhq.com',
                 'type' => SiteTypes::PHP,
                 'aliases' => [],
-                'directory' => '/public/current',
+                'directory' => '/current/public',
                 'wildcards' => false,
             ],
             'nginx' => 'soapbox-api-nginx',
