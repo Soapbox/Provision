@@ -36,6 +36,10 @@ return [
             'script' => 'install-datadog-apm.sh',
             'arguments' => [],
         ],
+        [
+            'script' => 'install-pdf-packages.sh',
+            'arguments' => [],
+        ],
     ],
     'sites' => [
         [

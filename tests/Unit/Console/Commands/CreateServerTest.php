@@ -45,6 +45,10 @@ class CreateServerTest extends TestCase
                                 'key' => 'logdna-key',
                             ],
                         ],
+                        [
+                            'script' => 'install-pdf-packages.sh',
+                            'arguments' => [],
+                        ],
                     ],
                     'sites' => [
                         [
@@ -332,6 +336,7 @@ class CreateServerTest extends TestCase
 
         $scripts->shouldReceive('exists')->with('install-datadog-agent')->andReturn(true);
         $scripts->shouldReceive('exists')->with('install-logdna-agent')->andReturn(true);
+        $scripts->shouldReceive('exists')->with('install-pdf-packages')->andReturn(true);
         $scripts->shouldReceive('exists')->with('logdna-track-directory')->andReturn(true);
         $scripts->shouldReceive('get')->with('install-datadog-agent')->andReturn('datadog script: {{key}}');
         $scripts->shouldReceive('get')->with('install-logdna-agent')->andReturn('logdna script: {{key}}');
@@ -555,6 +560,7 @@ class CreateServerTest extends TestCase
 
         $scripts->shouldReceive('exists')->with('install-datadog-agent')->andReturn(true);
         $scripts->shouldReceive('exists')->with('install-logdna-agent')->andReturn(true);
+        $scripts->shouldReceive('exists')->with('install-pdf-packages')->andReturn(true);
         $scripts->shouldReceive('exists')->with('logdna-track-directory')->andReturn(true);
         $scripts->shouldReceive('get')->with('install-datadog-agent')->andReturn('datadog script: {{key}}');
         $scripts->shouldReceive('get')->with('install-logdna-agent')->andReturn('logdna script: {{key}}');

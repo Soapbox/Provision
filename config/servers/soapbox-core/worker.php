@@ -32,6 +32,10 @@ return [
                 'key' => env('LOGDNA_KEY'),
             ],
         ],
+        [
+            'script' => 'install-pdf-packages.sh',
+            'arguments' => [],
+        ],
     ],
     'sites' => [
         [
