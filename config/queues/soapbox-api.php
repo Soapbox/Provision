@@ -17,7 +17,7 @@ return [
             'max-processes' => 14,
         ],
         [
-            'server-size' => ServerSizes::T3_MEDIUM,
+            'server-size' => ServerSizes::T3_LARGE,
             'max-processes' => 20,
         ],
     ],
