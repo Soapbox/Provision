@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Validators\QueueConfigValidator;
 use App\Validators\ServerConfigValidator;
+use Illuminate\Console\Command;
 use Illuminate\Validation\ValidationException;
 
 class ValidateConfig extends Command

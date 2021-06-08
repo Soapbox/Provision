@@ -2,17 +2,17 @@
 
 namespace Tests\Unit\Validators;
 
-use Mockery;
-use Tests\TestCase;
-use Illuminate\Support\Arr;
-use App\Forge\Constants\SiteTypes;
-use App\Forge\Constants\PHPVersions;
-use Illuminate\Filesystem\Filesystem;
 use App\Forge\Constants\DatabaseTypes;
-use Illuminate\Support\Facades\Storage;
+use App\Forge\Constants\PHPVersions;
+use App\Forge\Constants\SiteTypes;
 use App\Validators\ServerConfigValidator;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\ValidationException;
 use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
+use Mockery;
+use Tests\TestCase;
 
 class ServerConfigValidatorTest extends TestCase
 {
@@ -54,6 +54,7 @@ class ServerConfigValidatorTest extends TestCase
         foreach ($data as $key => $value) {
             Arr::set($result, $key, $value);
         }
+
         return $result;
     }
 
@@ -63,6 +64,7 @@ class ServerConfigValidatorTest extends TestCase
         foreach ($data as $key) {
             Arr::pull($result, $key);
         }
+
         return $result;
     }
 
@@ -71,7 +73,7 @@ class ServerConfigValidatorTest extends TestCase
         try {
             resolve(ServerConfigValidator::class)->validate($config);
         } catch (ValidationException $e) {
-            $this->fail("Validation failed\n" . json_encode($e->errors(), JSON_PRETTY_PRINT));
+            $this->fail("Validation failed\n".json_encode($e->errors(), JSON_PRETTY_PRINT));
         }
 
         $this->assertTrue(true);
@@ -83,6 +85,7 @@ class ServerConfigValidatorTest extends TestCase
             resolve(ServerConfigValidator::class)->validate($config);
         } catch (ValidationException $e) {
             $this->assertTrue(true);
+
             return;
         }
 

@@ -2,9 +2,9 @@
 
 namespace App\SQS;
 
+use Aws\Handler\GuzzleV6\GuzzleHandler;
 use Aws\Sqs\SqsClient;
 use Illuminate\Support\Collection;
-use Aws\Handler\GuzzleV6\GuzzleHandler;
 use JSHayes\FakeRequests\ClientFactory;
 
 class SQS

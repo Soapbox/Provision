@@ -2,13 +2,13 @@
 
 namespace Tests\Unit\Validators;
 
-use Tests\TestCase;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use App\Forge\Constants\ServerSizes;
 use App\Validators\QueueConfigValidator;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
+use Tests\TestCase;
 
 class QueueConfigValidatorTest extends TestCase
 {
@@ -59,6 +59,7 @@ class QueueConfigValidatorTest extends TestCase
         foreach ($data as $key => $value) {
             Arr::set($result, $key, $value);
         }
+
         return $result;
     }
 
@@ -68,6 +69,7 @@ class QueueConfigValidatorTest extends TestCase
         foreach ($data as $key) {
             Arr::pull($result, $key);
         }
+
         return $result;
     }
 
@@ -76,7 +78,7 @@ class QueueConfigValidatorTest extends TestCase
         try {
             resolve(QueueConfigValidator::class)->validate($config);
         } catch (ValidationException $e) {
-            $this->fail("Validation failed\n" . json_encode($e->errors(), JSON_PRETTY_PRINT));
+            $this->fail("Validation failed\n".json_encode($e->errors(), JSON_PRETTY_PRINT));
         }
 
         $this->assertTrue(true);
@@ -88,6 +90,7 @@ class QueueConfigValidatorTest extends TestCase
             resolve(QueueConfigValidator::class)->validate($config);
         } catch (ValidationException $e) {
             $this->assertTrue(true);
+
             return;
         }
 
@@ -163,7 +166,7 @@ class QueueConfigValidatorTest extends TestCase
     {
         return '<DescribeInstancesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
         <requestId>8f7724cf-496f-496e-8fe3-example</requestId>
-        <reservationSet>' .
+        <reservationSet>'.
         implode('', array_map(function ($instance) {
             return "<item>
                 <instancesSet>
@@ -174,7 +177,7 @@ class QueueConfigValidatorTest extends TestCase
                         </item>
                 </instancesSet>
             </item>";
-        }, $instances)) .
+        }, $instances)).
         '</reservationSet>
         </DescribeInstancesResponse>';
     }
@@ -322,7 +325,7 @@ class QueueConfigValidatorTest extends TestCase
     {
         $this->assertIsValid($this->overwrite(['queues.0.timeout' => 1]));
         $this->assertIsValid($this->overwrite(['queues.0.timeout' => 60]));
-        $this->assertIsNotValid($this->overwrite(['queues.0.timeout' => "test"]));
+        $this->assertIsNotValid($this->overwrite(['queues.0.timeout' => 'test']));
         $this->assertIsNotValid($this->overwrite(['queues.0.timeout' => '']));
         $this->assertIsNotValid($this->overwrite(['queues.0.timeout' => null]));
         $this->assertIsNotValid($this->overwrite(['queues.0.timeout' => 0]));
@@ -335,7 +338,7 @@ class QueueConfigValidatorTest extends TestCase
     {
         $this->assertIsValid($this->overwrite(['queues.0.sleep' => 0]));
         $this->assertIsValid($this->overwrite(['queues.0.sleep' => 60]));
-        $this->assertIsNotValid($this->overwrite(['queues.0.sleep' => "test"]));
+        $this->assertIsNotValid($this->overwrite(['queues.0.sleep' => 'test']));
         $this->assertIsNotValid($this->overwrite(['queues.0.sleep' => '']));
         $this->assertIsNotValid($this->overwrite(['queues.0.sleep' => null]));
         $this->assertIsNotValid($this->overwrite(['queues.0.sleep' => -1]));
@@ -348,7 +351,7 @@ class QueueConfigValidatorTest extends TestCase
     {
         $this->assertIsValid($this->overwrite(['queues.0.failed-job-delay' => 0]));
         $this->assertIsValid($this->overwrite(['queues.0.failed-job-delay' => 60]));
-        $this->assertIsNotValid($this->overwrite(['queues.0.failed-job-delay' => "test"]));
+        $this->assertIsNotValid($this->overwrite(['queues.0.failed-job-delay' => 'test']));
         $this->assertIsNotValid($this->overwrite(['queues.0.failed-job-delay' => '']));
         $this->assertIsNotValid($this->overwrite(['queues.0.failed-job-delay' => null]));
         $this->assertIsNotValid($this->overwrite(['queues.0.failed-job-delay' => -1]));
@@ -361,7 +364,7 @@ class QueueConfigValidatorTest extends TestCase
     {
         $this->assertIsValid($this->overwrite(['queues.0.processes' => 1]));
         $this->assertIsValid($this->overwrite(['queues.0.processes' => 60]));
-        $this->assertIsNotValid($this->overwrite(['queues.0.processes' => "test"]));
+        $this->assertIsNotValid($this->overwrite(['queues.0.processes' => 'test']));
         $this->assertIsNotValid($this->overwrite(['queues.0.processes' => '']));
         $this->assertIsNotValid($this->overwrite(['queues.0.processes' => null]));
         $this->assertIsNotValid($this->overwrite(['queues.0.processes' => 0]));
@@ -374,7 +377,7 @@ class QueueConfigValidatorTest extends TestCase
     {
         $this->assertIsValid($this->overwrite(['queues.0.maximum-tries' => 0]));
         $this->assertIsValid($this->overwrite(['queues.0.maximum-tries' => 60]));
-        $this->assertIsNotValid($this->overwrite(['queues.0.maximum-tries' => "test"]));
+        $this->assertIsNotValid($this->overwrite(['queues.0.maximum-tries' => 'test']));
         $this->assertIsNotValid($this->overwrite(['queues.0.maximum-tries' => '']));
         $this->assertIsNotValid($this->overwrite(['queues.0.maximum-tries' => null]));
         $this->assertIsNotValid($this->overwrite(['queues.0.maximum-tries' => -1]));
@@ -387,7 +390,7 @@ class QueueConfigValidatorTest extends TestCase
     {
         $this->assertIsValid($this->overwrite(['queues.0.daemon' => true]));
         $this->assertIsValid($this->overwrite(['queues.0.daemon' => false]));
-        $this->assertIsNotValid($this->overwrite(['queues.0.daemon' => "test"]));
+        $this->assertIsNotValid($this->overwrite(['queues.0.daemon' => 'test']));
         $this->assertIsNotValid($this->overwrite(['queues.0.daemon' => '']));
         $this->assertIsNotValid($this->overwrite(['queues.0.daemon' => null]));
     }

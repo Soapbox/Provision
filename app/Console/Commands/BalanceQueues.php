@@ -3,15 +3,15 @@
 namespace App\Console\Commands;
 
 use App\EC2\EC2;
-use App\SQS\SQS;
-use App\WorkerDiff;
 use App\Forge\Forge;
-use Illuminate\Support\Arr;
-use App\WorkerConfiguration;
-use App\Queues\Balancing\Rule;
-use Illuminate\Console\Command;
 use App\Queues\Balancing\Balancer;
+use App\Queues\Balancing\Rule;
+use App\SQS\SQS;
 use App\Validators\QueueConfigValidator;
+use App\WorkerConfiguration;
+use App\WorkerDiff;
+use Illuminate\Console\Command;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\ValidationException;
 
 class BalanceQueues extends Command
@@ -48,6 +48,7 @@ class BalanceQueues extends Command
             throw new \Exception(json_encode($e->errors(), JSON_PRETTY_PRINT));
             $this->error('The config file is invalid.');
             $this->line(json_encode($e->errors(), JSON_PRETTY_PRINT));
+
             return 1;
         }
 
@@ -71,6 +72,7 @@ class BalanceQueues extends Command
                     $sqs->updateVisibiltyTimeout($queueUrls[$queue['queue']], $newVisibilityTimeout);
                 } else {
                     $this->error('Aborting.');
+
                     return 1;
                 }
             }

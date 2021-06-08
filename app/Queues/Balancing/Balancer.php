@@ -2,8 +2,8 @@
 
 namespace App\Queues\Balancing;
 
-use App\Forge\Site;
 use App\EC2\Instance;
+use App\Forge\Site;
 use Illuminate\Support\Collection;
 
 class Balancer
@@ -27,7 +27,7 @@ class Balancer
         $node = $this->list->pop();
         $node->addQueue($queue);
 
-        if (!$node->isFull()) {
+        if (! $node->isFull()) {
             $this->list->append($node);
         }
     }

@@ -7,6 +7,7 @@ class SiteConfigUpdater
     private function readConfigFor(string $service): string
     {
         $config = config_path("sites/$service.php");
+
         return file_get_contents($config);
     }
 
@@ -36,7 +37,7 @@ class SiteConfigUpdater
         $end = $servers[count($servers) - 1];
 
         $indent = strlen($end) - strlen(ltrim($end, ' ')) + 4;
-        $line = str_repeat(' ', $indent) . "'$server',";
+        $line = str_repeat(' ', $indent)."'$server',";
 
         array_splice($servers, count($servers) - 1, 0, $line);
 

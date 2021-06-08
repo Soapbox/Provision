@@ -2,11 +2,11 @@
 
 namespace App\EC2;
 
-use Carbon\Carbon;
 use Aws\Ec2\Ec2Client;
+use Aws\Handler\GuzzleV6\GuzzleHandler;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
-use Aws\Handler\GuzzleV6\GuzzleHandler;
 use JSHayes\FakeRequests\ClientFactory;
 
 class EC2

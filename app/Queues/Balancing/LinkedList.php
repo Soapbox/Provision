@@ -23,6 +23,7 @@ class LinkedList
         $node = $this->head;
         $this->head = $node->next;
         $node->next = null;
+
         return $node;
     }
 }

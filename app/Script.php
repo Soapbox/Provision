@@ -19,6 +19,7 @@ class Script
     private function getScriptFromFile(): string
     {
         $code = Storage::disk('scripts')->get($this->script);
+
         return Replacer::replace($code, $this->arguments);
     }
 

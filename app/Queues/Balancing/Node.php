@@ -28,7 +28,7 @@ class Node
 
     public function addQueue(string $queue): void
     {
-        if (!array_key_exists($queue, $this->queues)) {
+        if (! array_key_exists($queue, $this->queues)) {
             $this->queues[$queue] = 0;
         }
 

@@ -2,15 +2,15 @@
 
 namespace Tests\Unit\Console\Commands;
 
+use App\Forge\Constants\DatabaseTypes;
+use App\Forge\Constants\PHPVersions;
+use App\Forge\Constants\SiteTypes;
+use Illuminate\Filesystem\Filesystem;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
 use Mockery;
 use Tests\TestCase;
-use Illuminate\Support\Str;
-use App\Forge\Constants\SiteTypes;
-use App\Forge\Constants\PHPVersions;
-use Illuminate\Filesystem\Filesystem;
-use App\Forge\Constants\DatabaseTypes;
-use Illuminate\Support\Facades\Storage;
-use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
 
 class CreateServerTest extends TestCase
 {
@@ -101,7 +101,7 @@ class CreateServerTest extends TestCase
     {
         return '<DescribeInstancesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
         <requestId>8f7724cf-496f-496e-8fe3-example</requestId>
-        <reservationSet>' .
+        <reservationSet>'.
         implode('', array_map(function ($instance) {
             return "<item>
                 <instancesSet>
@@ -111,7 +111,7 @@ class CreateServerTest extends TestCase
                         </item>
                 </instancesSet>
             </item>";
-        }, $instances)) .
+        }, $instances)).
         '</reservationSet>
         </DescribeInstancesResponse>';
     }
@@ -195,6 +195,7 @@ class CreateServerTest extends TestCase
             ],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return $params['name'] == 'test-web-005'
                 && $params['size'] == '0'
                 && $params['region'] == 'us-west-1'
@@ -217,6 +218,7 @@ class CreateServerTest extends TestCase
             ],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return $params['max_upload_size'] == 10;
         });
 
@@ -230,6 +232,7 @@ class CreateServerTest extends TestCase
 
         $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(200, '<xml></xml>')->when(function ($request) {
             $params = urldecode((string) $request->getBody());
+
             return Str::contains($params, 'Action=ModifyInstanceCreditSpecification')
                 && Str::contains($params, 'InstanceCreditSpecification.1.CpuCredits=standard')
                 && Str::contains($params, 'InstanceCreditSpecification.1.InstanceId=i-5');
@@ -237,6 +240,7 @@ class CreateServerTest extends TestCase
 
         $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(200, '<xml></xml>')->when(function ($request) {
             $params = urldecode((string) $request->getBody());
+
             return Str::contains($params, 'Action=CreateTags')
                 && Str::contains($params, 'ResourceId.1=i-5')
                 && Str::contains($params, 'Tag.1.Key=server-type')
@@ -261,6 +265,7 @@ class CreateServerTest extends TestCase
             ],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return $params['domain'] == 'api.test.soapboxdev.com'
                 && $params['project_type'] == 'php'
                 && $params['aliases'] == []
@@ -280,6 +285,7 @@ class CreateServerTest extends TestCase
             ->respondWith(200)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
+
                 return $params['content'] == 'nginx api.test.soapboxdev.com';
             });
 
@@ -290,6 +296,7 @@ class CreateServerTest extends TestCase
             ],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return $params['domain'] == 'soapboxdev.com'
                 && $params['project_type'] == 'html'
                 && $params['aliases'] == []
@@ -307,6 +314,7 @@ class CreateServerTest extends TestCase
             ->respondWith(200)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
+
                 return $params['content'] == 'nginx .soapboxdev.com';
             });
 
@@ -317,6 +325,7 @@ class CreateServerTest extends TestCase
             ],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return $params['domain'] == 'no-nginx.soapboxdev.com'
                 && $params['project_type'] == 'html'
                 && $params['aliases'] == []
@@ -341,6 +350,7 @@ class CreateServerTest extends TestCase
             'recipe' => ['id' => 1],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return array_key_exists('name', $params)
                 && $params['user'] == 'root'
                 && $params['script'] == "datadog script: datadog-key\nlogdna script: logdna-key\nlogdna track script: api.goodtalk.soapboxhq.com/storage/logs";
@@ -350,6 +360,7 @@ class CreateServerTest extends TestCase
             ->respondWith(200)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
+
                 return $params['servers'] = [10];
             });
 
@@ -418,6 +429,7 @@ class CreateServerTest extends TestCase
             ],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return $params['name'] == 'test-web-001'
                 && $params['size'] == '0'
                 && $params['region'] == 'us-west-1'
@@ -440,6 +452,7 @@ class CreateServerTest extends TestCase
             ],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return $params['max_upload_size'] == 10;
         });
 
@@ -453,6 +466,7 @@ class CreateServerTest extends TestCase
 
         $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(200, '<xml></xml>')->when(function ($request) {
             $params = urldecode((string) $request->getBody());
+
             return Str::contains($params, 'Action=ModifyInstanceCreditSpecification')
                 && Str::contains($params, 'InstanceCreditSpecification.1.CpuCredits=standard')
                 && Str::contains($params, 'InstanceCreditSpecification.1.InstanceId=i-5');
@@ -460,6 +474,7 @@ class CreateServerTest extends TestCase
 
         $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(200, '<xml></xml>')->when(function ($request) {
             $params = urldecode((string) $request->getBody());
+
             return Str::contains($params, 'Action=CreateTags')
                 && Str::contains($params, 'ResourceId.1=i-5')
                 && Str::contains($params, 'Tag.1.Key=server-type')
@@ -484,6 +499,7 @@ class CreateServerTest extends TestCase
             ],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return $params['domain'] == 'api.test.soapboxdev.com'
                 && $params['project_type'] == 'php'
                 && $params['aliases'] == []
@@ -503,6 +519,7 @@ class CreateServerTest extends TestCase
             ->respondWith(200)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
+
                 return $params['content'] == 'nginx api.test.soapboxdev.com';
             });
 
@@ -513,6 +530,7 @@ class CreateServerTest extends TestCase
             ],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return $params['domain'] == 'soapboxdev.com'
                 && $params['project_type'] == 'html'
                 && $params['aliases'] == []
@@ -530,6 +548,7 @@ class CreateServerTest extends TestCase
             ->respondWith(200)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
+
                 return $params['content'] == 'nginx .soapboxdev.com';
             });
 
@@ -540,6 +559,7 @@ class CreateServerTest extends TestCase
             ],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return $params['domain'] == 'no-nginx.soapboxdev.com'
                 && $params['project_type'] == 'html'
                 && $params['aliases'] == []
@@ -564,6 +584,7 @@ class CreateServerTest extends TestCase
             'recipe' => ['id' => 1],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
+
             return array_key_exists('name', $params)
                 && $params['user'] == 'root'
                 && $params['script'] == "datadog script: datadog-key\nlogdna script: logdna-key\nlogdna track script: api.goodtalk.soapboxhq.com/storage/logs";
@@ -573,6 +594,7 @@ class CreateServerTest extends TestCase
             ->respondWith(200)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
+
                 return $params['servers'] = [10];
             });
 

@@ -19,6 +19,7 @@ class Nginx
     public function __toString(): string
     {
         $nginx = Storage::disk('nginx')->get($this->file);
+
         return Replacer::replace($nginx, [
             'wildcard' => $this->site->isWildcard() ? '.' : '',
             'name' => $this->site->getName(),

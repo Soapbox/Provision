@@ -1,10 +1,10 @@
 <?php
 
-use App\Forge\Constants\SiteTypes;
-use App\Forge\Constants\PHPVersions;
 use App\Forge\Constants\DatabaseTypes;
+use App\Forge\Constants\PHPVersions;
 use App\Forge\Constants\Regions;
 use App\Forge\Constants\ServerSizes;
+use App\Forge\Constants\SiteTypes;
 
 return [
     'config' => [
