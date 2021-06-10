@@ -2,13 +2,13 @@
 
 namespace App\Validators;
 
-use Closure;
-use App\Forge\Forge;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Str;
 use App\Exceptions\ResourceNotFound;
+use App\Forge\Forge;
+use Closure;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 
 class ServerConfigValidator
 {
@@ -22,7 +22,7 @@ class ServerConfigValidator
     private function validateRegion(): Closure
     {
         return function ($attribute, $value, $fail) {
-            if (!$this->forge->getRegion($value)) {
+            if (! $this->forge->getRegion($value)) {
                 $fail("$value is not a valid region");
             }
         };
@@ -32,7 +32,7 @@ class ServerConfigValidator
     {
         return function ($attribute, $value, $fail) use ($region) {
             $region = $this->forge->getRegion($region);
-            if ($region && !$region->getSizes()->map->getSize()->contains($value)) {
+            if ($region && ! $region->getSizes()->map->getSize()->contains($value)) {
                 $fail("$value is not a valid size");
             }
         };
@@ -53,8 +53,9 @@ class ServerConfigValidator
     {
         return function ($attribute, $value, $fail) {
             $file = $value['script'];
-            if (!Storage::disk('scripts')->exists($file)) {
+            if (! Storage::disk('scripts')->exists($file)) {
                 $fail("$file script does not exist");
+
                 return;
             }
 
@@ -66,7 +67,7 @@ class ServerConfigValidator
                 return trim($key, '{}');
             }, $matches[0]));
 
-            if (count($keys) != count($value['arguments']) || !empty(array_diff_key($keys, $value['arguments']))) {
+            if (count($keys) != count($value['arguments']) || ! empty(array_diff_key($keys, $value['arguments']))) {
                 $fail("$file does not have valid arguments.");
             }
         };
@@ -75,8 +76,9 @@ class ServerConfigValidator
     private function validateNginxFile(): Closure
     {
         return function ($attribute, $value, $fail) {
-            if (!is_null($value) && !Storage::disk('nginx')->exists($value)) {
+            if (! is_null($value) && ! Storage::disk('nginx')->exists($value)) {
                 $fail("$value is not a valid nginx file.");
+
                 return;
             }
         };
@@ -86,7 +88,7 @@ class ServerConfigValidator
     {
         return function ($attribute, $value, $fail) {
             $key = Str::replaceFirst('tags.', '', $attribute);
-            if (!is_string($key) || is_numeric($key)) {
+            if (! is_string($key) || is_numeric($key)) {
                 $fail("$attribute has non string keys");
             }
         };

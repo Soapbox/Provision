@@ -2,13 +2,13 @@
 
 namespace App\Forge;
 
+use App\Exceptions\ResourceNotFound;
 use App\Nginx;
 use App\Recipe;
+use App\WorkerConfiguration;
 use Carbon\Carbon;
 use Illuminate\Support\Arr;
-use App\WorkerConfiguration;
 use Illuminate\Support\Collection;
-use App\Exceptions\ResourceNotFound;
 use Illuminate\Support\Facades\Cache;
 use JSHayes\FakeRequests\ClientFactory;
 
@@ -27,7 +27,7 @@ class Forge
             'headers' => [
                 'Accept' => 'application/json',
                 'Content-Type' => 'application/json',
-                'Authorization' => 'Bearer ' . config('services.forge.token'),
+                'Authorization' => 'Bearer '.config('services.forge.token'),
             ],
         ]);
     }
@@ -36,6 +36,7 @@ class Forge
     {
         return Cache::remember('forge.regions', Carbon::now()->addDay(), function () {
             $response = json_decode($this->client->get('regions')->getBody(), true);
+
             return collect(Arr::get($response, 'regions.aws'))->mapInto(Region::class);
         });
     }
@@ -49,13 +50,15 @@ class Forge
     {
         return Cache::remember('forge.servers', Carbon::now()->addDay(), function () {
             $response = json_decode($this->client->get('servers')->getBody(), true);
+
             return collect(Arr::get($response, 'servers'))->mapInto(Server::class);
         });
     }
 
     public function getServersByPattern(string $pattern): Collection
     {
-        $pattern = '/' . trim($pattern, '/') . '/';
+        $pattern = '/'.trim($pattern, '/').'/';
+
         return $this->getServers()->filter(function (Server $server) use ($pattern) {
             return preg_match($pattern, $server->getName());
         });
@@ -87,15 +90,16 @@ class Forge
 
     private function saveServerMeta($response)
     {
-        $filename = 'Provision-' . Carbon::now()->format('Y-m-d-H-i-s');
+        $filename = 'Provision-'.Carbon::now()->format('Y-m-d-H-i-s');
 
-        file_put_contents(storage_path() . '/' . $filename, $response->getBody());
+        file_put_contents(storage_path().'/'.$filename, $response->getBody());
     }
 
     public function updateServer(Server $server, array $params): Server
     {
         $response = $this->client->put("servers/{$server->getId()}", ['json' => $params]);
         Cache::forget('forge.servers');
+
         return new Server(Arr::get(json_decode($response->getBody(), true), 'server'));
     }
 
@@ -103,6 +107,7 @@ class Forge
     {
         return Cache::remember("forge.server.{$server->getId()}.sites", Carbon::now()->addDay(), function () use ($server) {
             $response = json_decode($this->client->get("servers/{$server->getId()}/sites")->getBody(), true);
+
             return collect(Arr::get($response, 'sites'))->map(function ($site) use ($server) {
                 return new Site($site, $server);
             });
@@ -120,6 +125,7 @@ class Forge
     {
         $response = $this->client->post("servers/{$server->getId()}/sites", ['json' => $params]);
         Cache::forget("forge.server.{$server->getId()}.sites");
+
         return new Site(json_decode($response->getBody(), true)['site'], $server);
     }
 
@@ -160,12 +166,14 @@ class Forge
     public function getWorkers(Site $site): Collection
     {
         $server = $site->getServer();
+
         return Cache::remember(
             "forge.server.{$server->getId()}.sites.{$site->getId()}.workers",
             Carbon::now()->addDay(),
             function () use ($server, $site) {
                 $response = $this->client->get("servers/{$server->getId()}/sites/{$site->getId()}/workers");
                 $response = json_decode($response->getBody(), true);
+
                 return collect(Arr::get($response, 'workers'))->map(function ($worker) use ($site) {
                     return new Worker($worker, $site);
                 });

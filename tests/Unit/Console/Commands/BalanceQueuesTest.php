@@ -2,10 +2,10 @@
 
 namespace Tests\Unit\Console\Commands;
 
-use Tests\TestCase;
-use Illuminate\Support\Str;
 use App\Forge\Constants\ServerSizes;
+use Illuminate\Support\Str;
 use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
+use Tests\TestCase;
 
 class BalanceQueuesTest extends TestCase
 {
@@ -58,7 +58,7 @@ class BalanceQueuesTest extends TestCase
     {
         return '<DescribeInstancesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
         <requestId>8f7724cf-496f-496e-8fe3-example</requestId>
-        <reservationSet>' .
+        <reservationSet>'.
         implode('', array_map(function ($instance) {
             return "<item>
                 <instancesSet>
@@ -69,7 +69,7 @@ class BalanceQueuesTest extends TestCase
                         </item>
                 </instancesSet>
             </item>";
-        }, $instances)) .
+        }, $instances)).
         '</reservationSet>
         </DescribeInstancesResponse>';
     }
@@ -77,10 +77,10 @@ class BalanceQueuesTest extends TestCase
     private function getListQueuesResponse(array $queues): string
     {
         return '<ListQueuesResponse>
-            <ListQueuesResult>' .
+            <ListQueuesResult>'.
             implode('', array_map(function ($queue) {
                 return "<QueueUrl>https://sqs.us-west-1.amazonaws.com/123456789012/$queue</QueueUrl>";
-            }, $queues)) .
+            }, $queues)).
             '</ListQueuesResult>
             <ResponseMetadata>
                 <RequestId>725275ae-0b9b-4762-b238-436d7c65a1ac</RequestId>
@@ -262,6 +262,7 @@ class BalanceQueuesTest extends TestCase
             ->respondWith(201)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
+
                 return $params['queue'] == 'queue-1'
                     && $params['connection'] == 'sqs'
                     && $params['timeout'] == 30
@@ -275,6 +276,7 @@ class BalanceQueuesTest extends TestCase
             ->respondWith(201)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
+
                 return $params['queue'] == 'queue-2'
                     && $params['connection'] == 'sqs'
                     && $params['timeout'] == 70
@@ -290,6 +292,7 @@ class BalanceQueuesTest extends TestCase
             ->respondWith(201)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
+
                 return $params['queue'] == 'queue-2'
                     && $params['connection'] == 'sqs'
                     && $params['timeout'] == 70
@@ -304,6 +307,7 @@ class BalanceQueuesTest extends TestCase
             ->respondWith(201)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
+
                 return $params['queue'] == 'queue-1'
                     && $params['connection'] == 'sqs'
                     && $params['timeout'] == 30
@@ -317,6 +321,7 @@ class BalanceQueuesTest extends TestCase
             ->respondWith(201)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
+
                 return $params['queue'] == 'queue-2'
                     && $params['connection'] == 'sqs'
                     && $params['timeout'] == 70

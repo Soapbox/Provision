@@ -2,10 +2,10 @@
 
 namespace App\Validators;
 
-use Closure;
 use App\EC2\EC2;
 use App\Forge\Forge;
 use App\Forge\Server;
+use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
@@ -33,7 +33,7 @@ class QueueConfigValidator
             }, $value);
 
             foreach ($instanceTypes as $instanceType) {
-                if (!in_array($instanceType, $balancedTypes)) {
+                if (! in_array($instanceType, $balancedTypes)) {
                     $fail("There is no balancing defined for the instance type of $instanceType");
                 }
             }

@@ -2,18 +2,18 @@
 
 namespace App\Console\Commands;
 
+use App\EC2\EC2;
+use App\Forge\Forge;
+use App\Forge\Server;
+use App\Forge\Site;
 use App\Nginx;
 use App\Recipe;
 use App\Script;
-use App\Waiter;
-use App\EC2\EC2;
-use App\Forge\Site;
-use App\Forge\Forge;
-use App\Forge\Server;
-use Illuminate\Support\Arr;
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Cache;
 use App\Validators\ServerConfigValidator;
+use App\Waiter;
+use Illuminate\Console\Command;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Validation\ValidationException;
 
 class CreateServer extends Command
@@ -61,12 +61,13 @@ class CreateServer extends Command
     private function getServerSize(array $config): string
     {
         $region = $this->forge->getRegion(Arr::get($config, 'config.region'));
+
         return $region->getSize(Arr::get($config, 'config.size'))->getId();
     }
 
     private function getNextServerName(array $config): string
     {
-        $namePattern = Arr::get($config, 'config.name') . '-\d+';
+        $namePattern = Arr::get($config, 'config.name').'-\d+';
         $instance = $this->ec2->getInstances()->filter(function ($instance) use ($namePattern) {
             return preg_match("/$namePattern/", $instance->getName());
         })->sortBy->getName()->last();
@@ -77,6 +78,7 @@ class CreateServer extends Command
 
         $sections = explode('\d+', $namePattern);
         $number = str_replace($sections, '', $instance->getName());
+
         return str_replace('\d+', sprintf('%03d', $number + 1), $namePattern);
     }
 
@@ -108,7 +110,7 @@ class CreateServer extends Command
             'network' => $this->getNetworkedServers($config),
         ]);
 
-        if (!$this->confirm('Are you sure you want to create this server?')) {
+        if (! $this->confirm('Are you sure you want to create this server?')) {
             exit(1);
         }
 
@@ -117,7 +119,8 @@ class CreateServer extends Command
         $this->waiter->waitFor(function () use (&$server) {
             Cache::forget('forge.servers');
             $server = $this->forge->getServer($server->getName());
-            return !$server->isReady();
+
+            return ! $server->isReady();
         }, 60);
         $this->line("Provisioning complete.\n");
 
@@ -131,7 +134,7 @@ class CreateServer extends Command
 
     private function provisionSite(Server $server, array $config): Site
     {
-        $this->line('Installing site: ' . Arr::get($config, 'config.domain'));
+        $this->line('Installing site: '.Arr::get($config, 'config.domain'));
 
         $params = [
             'domain' => Arr::get($config, 'config.domain'),
@@ -144,11 +147,12 @@ class CreateServer extends Command
         $this->waiter->waitFor(function () use ($server, &$site) {
             Cache::forget("forge.server.{$server->getId()}.sites");
             $site = $this->forge->getSite($server, $site->getName());
-            return !$site->isInstalled();
+
+            return ! $site->isInstalled();
         }, 5);
 
         $nginx = Arr::get($config, 'nginx');
-        if (!empty($nginx)) {
+        if (! empty($nginx)) {
             $this->forge->updateNginxConfig($site, new Nginx($nginx, $site));
         }
 
@@ -176,6 +180,7 @@ class CreateServer extends Command
             throw new \Exception(json_encode($e->errors(), JSON_PRETTY_PRINT));
             $this->error('The config file is invalid.');
             $this->line(json_encode($e->errors(), JSON_PRETTY_PRINT));
+
             return 1;
         }
 
