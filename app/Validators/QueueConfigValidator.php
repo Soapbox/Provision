@@ -2,10 +2,10 @@
 
 namespace App\Validators;
 
+use Closure;
 use App\EC2\EC2;
 use App\Forge\Forge;
 use App\Forge\Server;
-use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;

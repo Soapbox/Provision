@@ -2,15 +2,15 @@
 
 namespace Tests\Unit\Console\Commands;
 
-use App\Forge\Constants\DatabaseTypes;
-use App\Forge\Constants\PHPVersions;
-use App\Forge\Constants\SiteTypes;
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
-use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
 use Mockery;
 use Tests\TestCase;
+use Illuminate\Support\Str;
+use App\Forge\Constants\SiteTypes;
+use App\Forge\Constants\PHPVersions;
+use Illuminate\Filesystem\Filesystem;
+use App\Forge\Constants\DatabaseTypes;
+use Illuminate\Support\Facades\Storage;
+use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
 
 class CreateServerTest extends TestCase
 {
@@ -101,7 +101,7 @@ class CreateServerTest extends TestCase
     {
         return '<DescribeInstancesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
         <requestId>8f7724cf-496f-496e-8fe3-example</requestId>
-        <reservationSet>'.
+        <reservationSet>' .
         implode('', array_map(function ($instance) {
             return "<item>
                 <instancesSet>
@@ -111,7 +111,7 @@ class CreateServerTest extends TestCase
                         </item>
                 </instancesSet>
             </item>";
-        }, $instances)).
+        }, $instances)) .
         '</reservationSet>
         </DescribeInstancesResponse>';
     }

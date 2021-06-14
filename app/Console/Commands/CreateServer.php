@@ -2,18 +2,18 @@
 
 namespace App\Console\Commands;
 
-use App\EC2\EC2;
-use App\Forge\Forge;
-use App\Forge\Server;
-use App\Forge\Site;
 use App\Nginx;
 use App\Recipe;
 use App\Script;
-use App\Validators\ServerConfigValidator;
 use App\Waiter;
-use Illuminate\Console\Command;
+use App\EC2\EC2;
+use App\Forge\Site;
+use App\Forge\Forge;
+use App\Forge\Server;
 use Illuminate\Support\Arr;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use App\Validators\ServerConfigValidator;
 use Illuminate\Validation\ValidationException;
 
 class CreateServer extends Command
@@ -67,7 +67,7 @@ class CreateServer extends Command
 
     private function getNextServerName(array $config): string
     {
-        $namePattern = Arr::get($config, 'config.name').'-\d+';
+        $namePattern = Arr::get($config, 'config.name') . '-\d+';
         $instance = $this->ec2->getInstances()->filter(function ($instance) use ($namePattern) {
             return preg_match("/$namePattern/", $instance->getName());
         })->sortBy->getName()->last();
@@ -134,7 +134,7 @@ class CreateServer extends Command
 
     private function provisionSite(Server $server, array $config): Site
     {
-        $this->line('Installing site: '.Arr::get($config, 'config.domain'));
+        $this->line('Installing site: ' . Arr::get($config, 'config.domain'));
 
         $params = [
             'domain' => Arr::get($config, 'config.domain'),

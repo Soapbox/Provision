@@ -2,17 +2,17 @@
 
 namespace Tests\Unit\Validators;
 
-use App\Forge\Constants\DatabaseTypes;
-use App\Forge\Constants\PHPVersions;
-use App\Forge\Constants\SiteTypes;
-use App\Validators\ServerConfigValidator;
-use Illuminate\Filesystem\Filesystem;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\ValidationException;
-use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
 use Mockery;
 use Tests\TestCase;
+use Illuminate\Support\Arr;
+use App\Forge\Constants\SiteTypes;
+use App\Forge\Constants\PHPVersions;
+use Illuminate\Filesystem\Filesystem;
+use App\Forge\Constants\DatabaseTypes;
+use Illuminate\Support\Facades\Storage;
+use App\Validators\ServerConfigValidator;
+use Illuminate\Validation\ValidationException;
+use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
 
 class ServerConfigValidatorTest extends TestCase
 {
@@ -73,7 +73,7 @@ class ServerConfigValidatorTest extends TestCase
         try {
             resolve(ServerConfigValidator::class)->validate($config);
         } catch (ValidationException $e) {
-            $this->fail("Validation failed\n".json_encode($e->errors(), JSON_PRETTY_PRINT));
+            $this->fail("Validation failed\n" . json_encode($e->errors(), JSON_PRETTY_PRINT));
         }
 
         $this->assertTrue(true);

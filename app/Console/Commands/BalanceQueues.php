@@ -3,15 +3,15 @@
 namespace App\Console\Commands;
 
 use App\EC2\EC2;
-use App\Forge\Forge;
-use App\Queues\Balancing\Balancer;
-use App\Queues\Balancing\Rule;
 use App\SQS\SQS;
-use App\Validators\QueueConfigValidator;
-use App\WorkerConfiguration;
 use App\WorkerDiff;
-use Illuminate\Console\Command;
+use App\Forge\Forge;
 use Illuminate\Support\Arr;
+use App\WorkerConfiguration;
+use App\Queues\Balancing\Rule;
+use Illuminate\Console\Command;
+use App\Queues\Balancing\Balancer;
+use App\Validators\QueueConfigValidator;
 use Illuminate\Validation\ValidationException;
 
 class BalanceQueues extends Command

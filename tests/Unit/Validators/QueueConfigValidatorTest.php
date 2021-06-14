@@ -2,13 +2,13 @@
 
 namespace Tests\Unit\Validators;
 
-use App\Forge\Constants\ServerSizes;
-use App\Validators\QueueConfigValidator;
+use Tests\TestCase;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use App\Forge\Constants\ServerSizes;
+use App\Validators\QueueConfigValidator;
 use Illuminate\Validation\ValidationException;
 use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
-use Tests\TestCase;
 
 class QueueConfigValidatorTest extends TestCase
 {
@@ -78,7 +78,7 @@ class QueueConfigValidatorTest extends TestCase
         try {
             resolve(QueueConfigValidator::class)->validate($config);
         } catch (ValidationException $e) {
-            $this->fail("Validation failed\n".json_encode($e->errors(), JSON_PRETTY_PRINT));
+            $this->fail("Validation failed\n" . json_encode($e->errors(), JSON_PRETTY_PRINT));
         }
 
         $this->assertTrue(true);
@@ -166,7 +166,7 @@ class QueueConfigValidatorTest extends TestCase
     {
         return '<DescribeInstancesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
         <requestId>8f7724cf-496f-496e-8fe3-example</requestId>
-        <reservationSet>'.
+        <reservationSet>' .
         implode('', array_map(function ($instance) {
             return "<item>
                 <instancesSet>
@@ -177,7 +177,7 @@ class QueueConfigValidatorTest extends TestCase
                         </item>
                 </instancesSet>
             </item>";
-        }, $instances)).
+        }, $instances)) .
         '</reservationSet>
         </DescribeInstancesResponse>';
     }

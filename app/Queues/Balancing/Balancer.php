@@ -2,8 +2,8 @@
 
 namespace App\Queues\Balancing;
 
-use App\EC2\Instance;
 use App\Forge\Site;
+use App\EC2\Instance;
 use Illuminate\Support\Collection;
 
 class Balancer
