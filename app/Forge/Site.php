@@ -6,12 +6,9 @@ use App\Entity;
 
 class Site extends Entity
 {
-    private $server;
-
-    public function __construct(array $data, Server $server)
+    public function __construct(array $data, private Server $server)
     {
         parent::__construct($data);
-        $this->server = $server;
     }
 
     public function getServer(): Server

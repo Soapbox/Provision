@@ -4,11 +4,8 @@ namespace App\Queues\Balancing;
 
 class Rule
 {
-    private $rules;
-
-    public function __construct(array $rules)
+    public function __construct(private array $rules)
     {
-        $this->rules = $rules;
     }
 
     public function getServerSize(): string

@@ -7,13 +7,9 @@ use Illuminate\Support\Facades\Storage;
 class Script
 {
     private $code;
-    private $script;
-    private $arguments;
 
-    public function __construct(string $script, array $arguments)
+    public function __construct(private string $script, private array $arguments)
     {
-        $this->script = $script;
-        $this->arguments = $arguments;
     }
 
     private function getScriptFromFile(): string

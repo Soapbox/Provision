@@ -41,8 +41,6 @@ class Balancer
 
     public function getBalancedQueues(): Collection
     {
-        return $this->nodes->map(function (Node $node) {
-            return $node->getQueues();
-        });
+        return $this->nodes->map(fn (Node $node) => $node->getQueues());
     }
 }

@@ -4,6 +4,7 @@ namespace Tests\Unit\Console\Commands;
 
 use Tests\TestCase;
 use Illuminate\Support\Str;
+use Illuminate\Http\Response;
 use App\Forge\Constants\ServerSizes;
 use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
 
@@ -59,8 +60,8 @@ class BalanceQueuesTest extends TestCase
         return '<DescribeInstancesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
         <requestId>8f7724cf-496f-496e-8fe3-example</requestId>
         <reservationSet>' .
-        implode('', array_map(function ($instance) {
-            return "<item>
+        implode('', array_map(fn ($instance) =>
+             "<item>
                 <instancesSet>
                         <item>
                             <instanceId>{$instance['id']}</instanceId>
@@ -68,8 +69,7 @@ class BalanceQueuesTest extends TestCase
                             <instanceType>{$instance['type']}</instanceType>
                         </item>
                 </instancesSet>
-            </item>";
-        }, $instances)) .
+            </item>", $instances)) .
         '</reservationSet>
         </DescribeInstancesResponse>';
     }
@@ -78,9 +78,10 @@ class BalanceQueuesTest extends TestCase
     {
         return '<ListQueuesResponse>
             <ListQueuesResult>' .
-            implode('', array_map(function ($queue) {
-                return "<QueueUrl>https://sqs.us-west-1.amazonaws.com/123456789012/$queue</QueueUrl>";
-            }, $queues)) .
+            implode(
+                '',
+                array_map(fn ($queue) => "<QueueUrl>https://sqs.us-west-1.amazonaws.com/123456789012/$queue</QueueUrl>", $queues)
+            ) .
             '</ListQueuesResult>
             <ResponseMetadata>
                 <RequestId>725275ae-0b9b-4762-b238-436d7c65a1ac</RequestId>
@@ -117,32 +118,30 @@ class BalanceQueuesTest extends TestCase
             'queue-3',
         ];
         $handler->expects('post', 'https://sqs.us-west-1.amazonaws.com')
-            ->respondWith(200, $this->getListQueuesResponse($queues))
-            ->when(function ($request) {
-                return Str::contains((string) $request->getBody(), 'Action=ListQueues');
-            });
+            ->respondWith(Response::HTTP_OK, $this->getListQueuesResponse($queues))
+            ->when(fn ($request) => Str::contains((string) $request->getBody(), 'Action=ListQueues'));
 
         $handler->expects('post', 'https://sqs.us-west-1.amazonaws.com/123456789012/queue-1')
-            ->respondWith(200, $this->getQueueAttributeResponse(60))
-            ->when(function ($request) {
-                return Str::contains((string) $request->getBody(), 'Action=GetQueueAttributes')
-                    && Str::contains((string) $request->getBody(), 'AttributeName.1=VisibilityTimeout');
-            });
+            ->respondWith(Response::HTTP_OK, $this->getQueueAttributeResponse(60))
+            ->when(
+                fn ($request) => Str::contains((string) $request->getBody(), 'Action=GetQueueAttributes')
+                                 && Str::contains((string) $request->getBody(), 'AttributeName.1=VisibilityTimeout')
+            );
 
         $handler->expects('post', 'https://sqs.us-west-1.amazonaws.com/123456789012/queue-2')
-            ->respondWith(200, $this->getQueueAttributeResponse(70))
-            ->when(function ($request) {
-                return Str::contains((string) $request->getBody(), 'Action=GetQueueAttributes')
-                    && Str::contains((string) $request->getBody(), 'AttributeName.1=VisibilityTimeout');
-            });
+            ->respondWith(Response::HTTP_OK, $this->getQueueAttributeResponse(70))
+            ->when(
+                fn ($request) => Str::contains((string) $request->getBody(), 'Action=GetQueueAttributes')
+                                 && Str::contains((string) $request->getBody(), 'AttributeName.1=VisibilityTimeout')
+            );
 
         $handler->expects('post', 'https://sqs.us-west-1.amazonaws.com/123456789012/queue-2')
-            ->respondWith(200, '<xml></xml>')
-            ->when(function ($request) {
-                return Str::contains((string) $request->getBody(), 'Action=SetQueueAttributes')
-                    && Str::contains((string) $request->getBody(), 'Attribute.1.Name=VisibilityTimeout')
-                    && Str::contains((string) $request->getBody(), 'Attribute.1.Value=100');
-            });
+            ->respondWith(Response::HTTP_OK, '<xml></xml>')
+            ->when(
+                fn ($request) => Str::contains((string) $request->getBody(), 'Action=SetQueueAttributes')
+                                 && Str::contains((string) $request->getBody(), 'Attribute.1.Name=VisibilityTimeout')
+                                 && Str::contains((string) $request->getBody(), 'Attribute.1.Value=100')
+            );
 
         $servers = [
             'servers' => [
@@ -168,9 +167,9 @@ class BalanceQueuesTest extends TestCase
                 ],
             ],
         ];
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(200, $servers);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(Response::HTTP_OK, $servers);
 
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/1/sites')->respondWith(200, [
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/1/sites')->respondWith(Response::HTTP_OK, [
             'sites' => [
                 [
                     'id' => 1,
@@ -178,7 +177,7 @@ class BalanceQueuesTest extends TestCase
                 ],
             ],
         ]);
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/2/sites')->respondWith(200, [
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/2/sites')->respondWith(Response::HTTP_OK, [
             'sites' => [
                 [
                     'id' => 2,
@@ -186,7 +185,7 @@ class BalanceQueuesTest extends TestCase
                 ],
             ],
         ]);
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/3/sites')->respondWith(200, [
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/3/sites')->respondWith(Response::HTTP_OK, [
             'sites' => [
                 [
                     'id' => 3,
@@ -203,10 +202,8 @@ class BalanceQueuesTest extends TestCase
             ['id' => 'i-5', 'name' => 'test-web-002', 'type' => 't3.small'],
         ];
         $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')
-            ->respondWith(200, $this->getInstancesResponse($instances))
-            ->when(function ($request) {
-                return Str::contains((string) $request->getBody(), 'Action=DescribeInstances');
-            });
+            ->respondWith(Response::HTTP_OK, $this->getInstancesResponse($instances))
+            ->when(fn ($request) => Str::contains((string) $request->getBody(), 'Action=DescribeInstances'));
 
         $workers = [
             'workers' => [
@@ -224,7 +221,7 @@ class BalanceQueuesTest extends TestCase
             ],
         ];
         $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/1/sites/1/workers')
-            ->respondWitH(200, $workers);
+            ->respondWitH(Response::HTTP_OK, $workers);
 
         $workers = [
             'workers' => [
@@ -253,13 +250,13 @@ class BalanceQueuesTest extends TestCase
             ],
         ];
         $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/2/sites/2/workers')
-            ->respondWitH(200, $workers);
+            ->respondWitH(Response::HTTP_OK, $workers);
         $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/3/sites/3/workers')
-            ->respondWitH(200, []);
+            ->respondWitH(Response::HTTP_OK, []);
 
-        $handler->expects('delete', 'https://forge.laravel.com/api/v1/servers/1/sites/1/workers/1')->respondWith(204);
+        $handler->expects('delete', 'https://forge.laravel.com/api/v1/servers/1/sites/1/workers/1')->respondWith(Response::HTTP_NO_CONTENT);
         $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/1/sites/1/workers')
-            ->respondWith(201)
+            ->respondWith(Response::HTTP_CREATED)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
 
@@ -273,7 +270,7 @@ class BalanceQueuesTest extends TestCase
                     && $params['daemon'] == true;
             });
         $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/1/sites/1/workers')
-            ->respondWith(201)
+            ->respondWith(Response::HTTP_CREATED)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
 
@@ -287,9 +284,9 @@ class BalanceQueuesTest extends TestCase
                     && $params['daemon'] == true;
             });
 
-        $handler->expects('delete', 'https://forge.laravel.com/api/v1/servers/2/sites/2/workers/3')->respondWith(204);
+        $handler->expects('delete', 'https://forge.laravel.com/api/v1/servers/2/sites/2/workers/3')->respondWith(Response::HTTP_NO_CONTENT);
         $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/2/sites/2/workers')
-            ->respondWith(201)
+            ->respondWith(Response::HTTP_CREATED)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
 
@@ -304,7 +301,7 @@ class BalanceQueuesTest extends TestCase
             });
 
         $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/3/sites/3/workers')
-            ->respondWith(201)
+            ->respondWith(Response::HTTP_CREATED)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
 
@@ -318,7 +315,7 @@ class BalanceQueuesTest extends TestCase
                     && $params['daemon'] == true;
             });
         $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/3/sites/3/workers')
-            ->respondWith(201)
+            ->respondWith(Response::HTTP_CREATED)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
 

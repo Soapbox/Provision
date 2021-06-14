@@ -5,6 +5,7 @@ namespace Tests\Unit\Console\Commands;
 use Mockery;
 use Tests\TestCase;
 use Illuminate\Support\Str;
+use Illuminate\Http\Response;
 use App\Forge\Constants\SiteTypes;
 use App\Forge\Constants\PHPVersions;
 use Illuminate\Filesystem\Filesystem;
@@ -102,16 +103,15 @@ class CreateServerTest extends TestCase
         return '<DescribeInstancesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
         <requestId>8f7724cf-496f-496e-8fe3-example</requestId>
         <reservationSet>' .
-        implode('', array_map(function ($instance) {
-            return "<item>
+        implode('', array_map(fn ($instance) =>
+             "<item>
                 <instancesSet>
                         <item>
                             <instanceId>{$instance['id']}</instanceId>
                             <keyName>{$instance['name']}</keyName>
                         </item>
                 </instancesSet>
-            </item>";
-        }, $instances)) .
+            </item>", $instances)) .
         '</reservationSet>
         </DescribeInstancesResponse>';
     }
@@ -124,7 +124,7 @@ class CreateServerTest extends TestCase
         $handler = $this->fakeRequests();
         config($this->config);
 
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(200, [
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(Response::HTTP_OK, [
             'regions' => [
                 'aws' => [
                     [
@@ -152,11 +152,9 @@ class CreateServerTest extends TestCase
             ['id' => 'i-4', 'name' => 'test-web-004'],
         ];
         $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(
-            200,
+            Response::HTTP_OK,
             $this->getInstancesResponse($instances)
-        )->when(function ($request) {
-            return Str::contains((string) $request->getBody(), 'Action=DescribeInstances');
-        });
+        )->when(fn ($request) => Str::contains((string) $request->getBody(), 'Action=DescribeInstances'));
 
         $servers = [
             'servers' => [
@@ -186,9 +184,9 @@ class CreateServerTest extends TestCase
                 ],
             ],
         ];
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(200, $servers);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(Response::HTTP_OK, $servers);
 
-        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers')->respondWith(200, [
+        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers')->respondWith(Response::HTTP_OK, [
             'server' => [
                 'id' => 10,
                 'name' => 'test-web-005',
@@ -209,9 +207,9 @@ class CreateServerTest extends TestCase
             'is_ready' => true,
         ];
 
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(200, $servers);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(Response::HTTP_OK, $servers);
 
-        $handler->expects('put', 'https://forge.laravel.com/api/v1/servers/10')->respondWith(200, [
+        $handler->expects('put', 'https://forge.laravel.com/api/v1/servers/10')->respondWith(Response::HTTP_OK, [
             'server' => [
                 'id' => 10,
                 'name' => 'test-web-005',
@@ -224,13 +222,11 @@ class CreateServerTest extends TestCase
 
         $instances[] = ['id' => 'i-5', 'name' => 'test-web-005'];
         $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(
-            200,
+            Response::HTTP_OK,
             $this->getInstancesResponse($instances)
-        )->when(function ($request) {
-            return Str::contains((string) $request->getBody(), 'Action=DescribeInstances');
-        });
+        )->when(fn ($request) => Str::contains((string) $request->getBody(), 'Action=DescribeInstances'));
 
-        $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(200, '<xml></xml>')->when(function ($request) {
+        $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(Response::HTTP_OK, '<xml></xml>')->when(function ($request) {
             $params = urldecode((string) $request->getBody());
 
             return Str::contains($params, 'Action=ModifyInstanceCreditSpecification')
@@ -238,7 +234,7 @@ class CreateServerTest extends TestCase
                 && Str::contains($params, 'InstanceCreditSpecification.1.InstanceId=i-5');
         });
 
-        $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(200, '<xml></xml>')->when(function ($request) {
+        $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(Response::HTTP_OK, '<xml></xml>')->when(function ($request) {
             $params = urldecode((string) $request->getBody());
 
             return Str::contains($params, 'Action=CreateTags')
@@ -254,11 +250,11 @@ class CreateServerTest extends TestCase
                 ['id' => 1, 'name' => 'default'],
             ],
         ];
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, $sites);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, $sites);
 
-        $handler->expects('delete', 'https://forge.laravel.com/api/v1/servers/10/sites/1')->respondWith(204);
+        $handler->expects('delete', 'https://forge.laravel.com/api/v1/servers/10/sites/1')->respondWith(Response::HTTP_NO_CONTENT);
 
-        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, [
+        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, [
             'site' => [
                 'id' => 2,
                 'name' => 'api.test.soapboxdev.com',
@@ -274,7 +270,7 @@ class CreateServerTest extends TestCase
         });
 
         $sites['sites'][] = ['id' => 2, 'name' => 'api.test.soapboxdev.com', 'status' => 'installed', 'wildcards' => false];
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, $sites);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, $sites);
 
         $nginx = Mockery::mock(Filesystem::class);
         Storage::shouldReceive('disk')->with('nginx')->andReturn($nginx);
@@ -282,14 +278,14 @@ class CreateServerTest extends TestCase
         $nginx->shouldReceive('get')->with('test-api-nginx')->andReturn('nginx {{wildcard}}{{name}}');
 
         $handler->expects('put', 'https://forge.laravel.com/api/v1/servers/10/sites/2/nginx')
-            ->respondWith(200)
+            ->respondWith(Response::HTTP_OK)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
 
                 return $params['content'] == 'nginx api.test.soapboxdev.com';
             });
 
-        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, [
+        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, [
             'site' => [
                 'id' => 3,
                 'name' => 'soapboxdev.com',
@@ -305,20 +301,20 @@ class CreateServerTest extends TestCase
         });
 
         $sites['sites'][] = ['id' => 3, 'name' => 'soapboxdev.com', 'status' => 'installed', 'wildcards' => true];
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, $sites);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, $sites);
 
         $nginx->shouldReceive('exists')->with('test-web-client-nginx')->andReturn(true);
         $nginx->shouldReceive('get')->with('test-web-client-nginx')->andReturn('nginx {{wildcard}}{{name}}');
 
         $handler->expects('put', 'https://forge.laravel.com/api/v1/servers/10/sites/3/nginx')
-            ->respondWith(200)
+            ->respondWith(Response::HTTP_OK)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
 
                 return $params['content'] == 'nginx .soapboxdev.com';
             });
 
-        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, [
+        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, [
             'site' => [
                 'id' => 4,
                 'name' => 'no-nginx.soapboxdev.com',
@@ -334,7 +330,7 @@ class CreateServerTest extends TestCase
         });
 
         $sites['sites'][] = ['id' => 4, 'name' => 'no-nginx.soapboxdev.com', 'status' => 'installed', 'wildcards' => true];
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, $sites);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, $sites);
 
         $scripts = Mockery::mock(Filesystem::class);
         Storage::shouldReceive('disk')->with('scripts')->andReturn($scripts);
@@ -346,7 +342,7 @@ class CreateServerTest extends TestCase
         $scripts->shouldReceive('get')->with('install-logdna-agent')->andReturn('logdna script: {{key}}');
         $scripts->shouldReceive('get')->with('logdna-track-directory')->andReturn('logdna track script: {{directory}}');
 
-        $handler->expects('post', 'https://forge.laravel.com/api/v1/recipes')->respondWith(200, [
+        $handler->expects('post', 'https://forge.laravel.com/api/v1/recipes')->respondWith(Response::HTTP_OK, [
             'recipe' => ['id' => 1],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
@@ -357,7 +353,7 @@ class CreateServerTest extends TestCase
         });
 
         $handler->expects('post', 'https://forge.laravel.com/api/v1/recipes/1/run')
-            ->respondWith(200)
+            ->respondWith(Response::HTTP_OK)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
 
@@ -378,7 +374,7 @@ class CreateServerTest extends TestCase
         $handler = $this->fakeRequests();
         config($this->config);
 
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(200, [
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(Response::HTTP_OK, [
             'regions' => [
                 'aws' => [
                     [
@@ -402,7 +398,7 @@ class CreateServerTest extends TestCase
         $instances = [
         ];
         $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(
-            200,
+            Response::HTTP_OK,
             $this->getInstancesResponse($instances)
         )->when(function ($request) {
             return Str::contains((string) $request->getBody(), 'Action=DescribeInstances');
@@ -420,9 +416,9 @@ class CreateServerTest extends TestCase
                 ],
             ],
         ];
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(200, $servers);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(Response::HTTP_OK, $servers);
 
-        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers')->respondWith(200, [
+        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers')->respondWith(Response::HTTP_OK, [
             'server' => [
                 'id' => 10,
                 'name' => 'test-web-001',
@@ -443,9 +439,9 @@ class CreateServerTest extends TestCase
             'is_ready' => true,
         ];
 
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(200, $servers);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(Response::HTTP_OK, $servers);
 
-        $handler->expects('put', 'https://forge.laravel.com/api/v1/servers/10')->respondWith(200, [
+        $handler->expects('put', 'https://forge.laravel.com/api/v1/servers/10')->respondWith(Response::HTTP_OK, [
             'server' => [
                 'id' => 10,
                 'name' => 'test-web-001',
@@ -458,13 +454,13 @@ class CreateServerTest extends TestCase
 
         $instances[] = ['id' => 'i-5', 'name' => 'test-web-001'];
         $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(
-            200,
+            Response::HTTP_OK,
             $this->getInstancesResponse($instances)
         )->when(function ($request) {
             return Str::contains((string) $request->getBody(), 'Action=DescribeInstances');
         });
 
-        $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(200, '<xml></xml>')->when(function ($request) {
+        $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(Response::HTTP_OK, '<xml></xml>')->when(function ($request) {
             $params = urldecode((string) $request->getBody());
 
             return Str::contains($params, 'Action=ModifyInstanceCreditSpecification')
@@ -472,7 +468,7 @@ class CreateServerTest extends TestCase
                 && Str::contains($params, 'InstanceCreditSpecification.1.InstanceId=i-5');
         });
 
-        $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(200, '<xml></xml>')->when(function ($request) {
+        $handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(Response::HTTP_OK, '<xml></xml>')->when(function ($request) {
             $params = urldecode((string) $request->getBody());
 
             return Str::contains($params, 'Action=CreateTags')
@@ -488,11 +484,11 @@ class CreateServerTest extends TestCase
                 ['id' => 1, 'name' => 'default'],
             ],
         ];
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, $sites);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, $sites);
 
-        $handler->expects('delete', 'https://forge.laravel.com/api/v1/servers/10/sites/1')->respondWith(204);
+        $handler->expects('delete', 'https://forge.laravel.com/api/v1/servers/10/sites/1')->respondWith(Response::HTTP_NO_CONTENT);
 
-        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, [
+        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, [
             'site' => [
                 'id' => 2,
                 'name' => 'api.test.soapboxdev.com',
@@ -508,7 +504,7 @@ class CreateServerTest extends TestCase
         });
 
         $sites['sites'][] = ['id' => 2, 'name' => 'api.test.soapboxdev.com', 'status' => 'installed', 'wildcards' => false];
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, $sites);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, $sites);
 
         $nginx = Mockery::mock(Filesystem::class);
         Storage::shouldReceive('disk')->with('nginx')->andReturn($nginx);
@@ -516,14 +512,14 @@ class CreateServerTest extends TestCase
         $nginx->shouldReceive('get')->with('test-api-nginx')->andReturn('nginx {{wildcard}}{{name}}');
 
         $handler->expects('put', 'https://forge.laravel.com/api/v1/servers/10/sites/2/nginx')
-            ->respondWith(200)
+            ->respondWith(Response::HTTP_OK)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
 
                 return $params['content'] == 'nginx api.test.soapboxdev.com';
             });
 
-        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, [
+        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, [
             'site' => [
                 'id' => 3,
                 'name' => 'soapboxdev.com',
@@ -539,20 +535,20 @@ class CreateServerTest extends TestCase
         });
 
         $sites['sites'][] = ['id' => 3, 'name' => 'soapboxdev.com', 'status' => 'installed', 'wildcards' => true];
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, $sites);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, $sites);
 
         $nginx->shouldReceive('exists')->with('test-web-client-nginx')->andReturn(true);
         $nginx->shouldReceive('get')->with('test-web-client-nginx')->andReturn('nginx {{wildcard}}{{name}}');
 
         $handler->expects('put', 'https://forge.laravel.com/api/v1/servers/10/sites/3/nginx')
-            ->respondWith(200)
+            ->respondWith(Response::HTTP_OK)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
 
                 return $params['content'] == 'nginx .soapboxdev.com';
             });
 
-        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, [
+        $handler->expects('post', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, [
             'site' => [
                 'id' => 4,
                 'name' => 'no-nginx.soapboxdev.com',
@@ -568,7 +564,7 @@ class CreateServerTest extends TestCase
         });
 
         $sites['sites'][] = ['id' => 4, 'name' => 'no-nginx.soapboxdev.com', 'status' => 'installed', 'wildcards' => true];
-        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(200, $sites);
+        $handler->expects('get', 'https://forge.laravel.com/api/v1/servers/10/sites')->respondWith(Response::HTTP_OK, $sites);
 
         $scripts = Mockery::mock(Filesystem::class);
         Storage::shouldReceive('disk')->with('scripts')->andReturn($scripts);
@@ -580,7 +576,7 @@ class CreateServerTest extends TestCase
         $scripts->shouldReceive('get')->with('install-logdna-agent')->andReturn('logdna script: {{key}}');
         $scripts->shouldReceive('get')->with('logdna-track-directory')->andReturn('logdna track script: {{directory}}');
 
-        $handler->expects('post', 'https://forge.laravel.com/api/v1/recipes')->respondWith(200, [
+        $handler->expects('post', 'https://forge.laravel.com/api/v1/recipes')->respondWith(Response::HTTP_OK, [
             'recipe' => ['id' => 1],
         ])->when(function ($request) {
             $params = json_decode($request->getBody(), true);
@@ -591,7 +587,7 @@ class CreateServerTest extends TestCase
         });
 
         $handler->expects('post', 'https://forge.laravel.com/api/v1/recipes/1/run')
-            ->respondWith(200)
+            ->respondWith(Response::HTTP_OK)
             ->when(function ($request) {
                 $params = json_decode($request->getBody(), true);
 

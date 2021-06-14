@@ -5,6 +5,7 @@ namespace Tests\Unit\Validators;
 use Mockery;
 use Tests\TestCase;
 use Illuminate\Support\Arr;
+use Illuminate\Http\Response;
 use App\Forge\Constants\SiteTypes;
 use App\Forge\Constants\PHPVersions;
 use Illuminate\Filesystem\Filesystem;
@@ -96,7 +97,7 @@ class ServerConfigValidatorTest extends TestCase
     {
         parent::setUp();
         $this->handler = $this->fakeRequests();
-        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(200, [
+        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(Response::HTTP_OK, [
             'regions' => [
                 'aws' => [
                     [
@@ -113,18 +114,18 @@ class ServerConfigValidatorTest extends TestCase
         $this->validNginxFiles = ['valid-nginx'];
 
         $this->scripts = Mockery::mock(Filesystem::class);
-        $this->scripts->shouldReceive('exists')->andReturnUsing(function ($file) {
-            return array_key_exists($file, $this->validScripts);
-        })->zeroOrMoreTimes();
-        $this->scripts->shouldReceive('get')->andReturnUsing(function ($file) {
-            return $this->validScripts[$file];
-        })->zeroOrMoreTimes();
+        $this->scripts->shouldReceive('exists')->andReturnUsing(
+            fn ($file) => array_key_exists($file, $this->validScripts)
+        )->zeroOrMoreTimes();
+        $this->scripts->shouldReceive('get')->andReturnUsing(
+            fn ($file) => $this->validScripts[$file]
+        )->zeroOrMoreTimes();
         Storage::shouldReceive('disk')->with('scripts')->andReturn($this->scripts)->zeroOrMoreTimes();
 
         $this->nginx = Mockery::mock(Filesystem::class);
-        $this->nginx->shouldReceive('exists')->andReturnUsing(function ($file) {
-            return in_array($file, $this->validNginxFiles);
-        })->zeroOrMoreTimes();
+        $this->nginx->shouldReceive('exists')->andReturnUsing(
+            fn ($file) => in_array($file, $this->validNginxFiles)
+        )->zeroOrMoreTimes();
         Storage::shouldReceive('disk')->with('nginx')->andReturn($this->nginx)->zeroOrMoreTimes();
     }
 
@@ -193,7 +194,7 @@ class ServerConfigValidatorTest extends TestCase
      */
     public function it_passes_validation_when_the_config_region_is_correct()
     {
-        $this->fakeRequests()->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(200, [
+        $this->fakeRequests()->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(Response::HTTP_OK, [
             'regions' => [
                 'aws' => [
                     [
@@ -226,7 +227,7 @@ class ServerConfigValidatorTest extends TestCase
      */
     public function it_passes_validation_when_the_config_size_is_correct()
     {
-        $this->fakeRequests()->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(200, [
+        $this->fakeRequests()->expects('get', 'https://forge.laravel.com/api/v1/regions')->respondWith(Response::HTTP_OK, [
             'regions' => [
                 'aws' => [
                     [
@@ -268,7 +269,7 @@ class ServerConfigValidatorTest extends TestCase
      */
     public function it_passes_validation_when_the_network_is_contains_only_valid_servers()
     {
-        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(200, [
+        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(Response::HTTP_OK, [
             'servers' => [
                 ['id' => 1, 'name' => 'server-001'],
                 ['id' => 2, 'name' => 'server-002'],
