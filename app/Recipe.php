@@ -14,7 +14,7 @@ class Recipe
 
     public function getName(): string
     {
-        return 'Provision - '.Carbon::now();
+        return 'Provision - ' . Carbon::now();
     }
 
     public function getUser(): string

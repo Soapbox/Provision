@@ -7,11 +7,7 @@ use Illuminate\Support\Collection;
 
 class WorkerDiff
 {
-    private $existing;
-
-    private $configured;
-
-    public function __construct(Site $site, Collection $existing, Collection $configured)
+    public function __construct(Site $site, private  Collection $existing, private Collection $configured)
     {
         $this->site = $site;
 

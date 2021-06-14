@@ -2,18 +2,18 @@
 
 namespace App\Console\Commands;
 
-use App\EC2\EC2;
-use App\Forge\Forge;
-use App\Forge\Server;
-use App\Forge\Site;
 use App\Nginx;
 use App\Recipe;
 use App\Script;
-use App\Validators\ServerConfigValidator;
 use App\Waiter;
-use Illuminate\Console\Command;
+use App\EC2\EC2;
+use App\Forge\Site;
+use App\Forge\Forge;
+use App\Forge\Server;
 use Illuminate\Support\Arr;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
+use App\Validators\ServerConfigValidator;
 use Illuminate\Validation\ValidationException;
 
 class CreateServer extends Command
@@ -33,29 +33,13 @@ class CreateServer extends Command
     protected $description = 'Command description';
 
     /**
-     * @var \App\Forge\Forge
-     */
-    private $forge;
-
-    /**
-     * @var \App\EC2\EC2
-     */
-    private $ec2;
-
-    private $waiter;
-
-    /**
      * Create a new command instance.
      *
      * @return void
      */
-    public function __construct(Forge $forge, EC2 $ec2, Waiter $waiter)
+    public function __construct(private Forge $forge, private EC2 $ec2, private Waiter $waiter)
     {
         parent::__construct();
-
-        $this->forge = $forge;
-        $this->ec2 = $ec2;
-        $this->waiter = $waiter;
     }
 
     private function getServerSize(array $config): string
@@ -67,10 +51,10 @@ class CreateServer extends Command
 
     private function getNextServerName(array $config): string
     {
-        $namePattern = Arr::get($config, 'config.name').'-\d+';
-        $instance = $this->ec2->getInstances()->filter(function ($instance) use ($namePattern) {
-            return preg_match("/$namePattern/", $instance->getName());
-        })->sortBy->getName()->last();
+        $namePattern = Arr::get($config, 'config.name') . '-\d+';
+        $instance = $this->ec2->getInstances()->filter(
+            fn ($instance) => preg_match("/$namePattern/", $instance->getName())
+        )->sortBy->getName()->last();
 
         if (is_null($instance)) {
             return str_replace('\d+', sprintf('%03d', 1), $namePattern);
@@ -134,7 +118,7 @@ class CreateServer extends Command
 
     private function provisionSite(Server $server, array $config): Site
     {
-        $this->line('Installing site: '.Arr::get($config, 'config.domain'));
+        $this->line('Installing site: ' . Arr::get($config, 'config.domain'));
 
         $params = [
             'domain' => Arr::get($config, 'config.domain'),
@@ -194,9 +178,7 @@ class CreateServer extends Command
 
         $this->line('Provisioning Sites');
         $this->forge->deleteSite($this->forge->getSite($server, 'default'));
-        foreach (Arr::get($config, 'sites') as $siteConfig) {
-            $this->provisionSite($server, $siteConfig);
-        }
+        collect(Arr::get($config, 'sites'))->map(fn ($siteConfig) => $this->provisionSite($server, $siteConfig));
 
         $this->line('Running post provision script');
         $scripts = Arr::get($config, 'scripts');
@@ -204,11 +186,8 @@ class CreateServer extends Command
             $scripts = array_merge($scripts, Arr::get($siteConfig, 'scripts'));
         }
 
-        $scripts = collect($scripts)->map(function ($script) {
-            return new Script($script['script'], $script['arguments']);
-        });
-        $recipe = new Recipe($scripts);
-        $this->forge->runRecipe($server, $recipe);
+        $scripts = collect($scripts)->map(fn ($script) => new Script($script['script'], $script['arguments']));
+        $this->forge->runRecipe($server, new Recipe($scripts));
 
         $this->line('Server provisioning complete.');
         $this->line('See https://github.com/Soapbox/Provision/wiki/Additional-Steps for the remaining manual steps');

@@ -2,13 +2,14 @@
 
 namespace Tests\Unit\Validators;
 
-use App\Forge\Constants\ServerSizes;
-use App\Validators\QueueConfigValidator;
+use Tests\TestCase;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
+use Illuminate\Http\Response;
+use App\Forge\Constants\ServerSizes;
+use App\Validators\QueueConfigValidator;
 use Illuminate\Validation\ValidationException;
 use JSHayes\FakeRequests\Traits\Laravel\FakeRequests;
-use Tests\TestCase;
 
 class QueueConfigValidatorTest extends TestCase
 {
@@ -78,7 +79,7 @@ class QueueConfigValidatorTest extends TestCase
         try {
             resolve(QueueConfigValidator::class)->validate($config);
         } catch (ValidationException $e) {
-            $this->fail("Validation failed\n".json_encode($e->errors(), JSON_PRETTY_PRINT));
+            $this->fail("Validation failed\n" . json_encode($e->errors(), JSON_PRETTY_PRINT));
         }
 
         $this->assertTrue(true);
@@ -109,7 +110,7 @@ class QueueConfigValidatorTest extends TestCase
 
     private function mockForgeServerApiCall(): void
     {
-        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(200, [
+        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/servers')->respondWith(Response::HTTP_OK, [
             'servers' => [
                 [
                     'id' => 1,
@@ -129,7 +130,7 @@ class QueueConfigValidatorTest extends TestCase
 
     private function mockForgeSiteApiCalls(): void
     {
-        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/servers/1/sites')->respondWith(200, [
+        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/servers/1/sites')->respondWith(Response::HTTP_OK, [
             'sites' => [
                 [
                     'id' => 1,
@@ -138,7 +139,7 @@ class QueueConfigValidatorTest extends TestCase
             ],
         ]);
 
-        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/servers/2/sites')->respondWith(200, [
+        $this->handler->expects('get', 'https://forge.laravel.com/api/v1/servers/2/sites')->respondWith(Response::HTTP_OK, [
             'sites' => [
                 [
                     'id' => 2,
@@ -155,20 +156,20 @@ class QueueConfigValidatorTest extends TestCase
             ['id' => 'i-2', 'name' => 'test-worker-002', 'type' => 't3.medium'],
         ];
         $this->handler->expects('post', 'https://ec2.us-west-1.amazonaws.com')->respondWith(
-            200,
+            Response::HTTP_OK,
             $this->getInstancesResponse($instances)
-        )->when(function ($request) {
-            return Str::contains((string) $request->getBody(), 'Action=DescribeInstances');
-        });
+        )->when(fn ($request) => Str::contains((string) $request->getBody(), 'Action=DescribeInstances'));
     }
 
     private function getInstancesResponse(array $instances): string
     {
         return '<DescribeInstancesResponse xmlns="http://ec2.amazonaws.com/doc/2016-11-15/">
         <requestId>8f7724cf-496f-496e-8fe3-example</requestId>
-        <reservationSet>'.
-        implode('', array_map(function ($instance) {
-            return "<item>
+        <reservationSet>' .
+        implode(
+            '',
+            array_map(fn ($instance) =>
+            "<item>
                 <instancesSet>
                         <item>
                             <instanceId>{$instance['id']}</instanceId>
@@ -176,8 +177,8 @@ class QueueConfigValidatorTest extends TestCase
                             <instanceType>{$instance['type']}</instanceType>
                         </item>
                 </instancesSet>
-            </item>";
-        }, $instances)).
+            </item>", $instances)
+        ) .
         '</reservationSet>
         </DescribeInstancesResponse>';
     }

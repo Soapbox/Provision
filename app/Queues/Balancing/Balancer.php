@@ -2,8 +2,8 @@
 
 namespace App\Queues\Balancing;
 
-use App\EC2\Instance;
 use App\Forge\Site;
+use App\EC2\Instance;
 use Illuminate\Support\Collection;
 
 class Balancer
@@ -41,8 +41,6 @@ class Balancer
 
     public function getBalancedQueues(): Collection
     {
-        return $this->nodes->map(function (Node $node) {
-            return $node->getQueues();
-        });
+        return $this->nodes->map(fn (Node $node) => $node->getQueues());
     }
 }
