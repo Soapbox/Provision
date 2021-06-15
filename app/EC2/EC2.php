@@ -2,11 +2,11 @@
 
 namespace App\EC2;
 
-use Aws\Ec2\Ec2Client;
-use Aws\Handler\GuzzleV6\GuzzleHandler;
 use Carbon\Carbon;
+use Aws\Ec2\Ec2Client;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Aws\Handler\GuzzleV6\GuzzleHandler;
 use JSHayes\FakeRequests\ClientFactory;
 
 class EC2
@@ -24,29 +24,27 @@ class EC2
 
     public function getInstances(): Collection
     {
-        return Cache::remember('ec2.instances', Carbon::now()->addDay(), function () {
-            return collect($this->client->describeInstances()['Reservations'])->map(function ($item) {
-                return $item['Instances'];
-            })->flatten(1)->mapInto(Instance::class);
-        });
+        return Cache::remember('ec2.instances', Carbon::now()->addDay(), fn () =>
+            collect($this->client->describeInstances()['Reservations'])->map(
+                fn ($item) => $item['Instances']
+            )->flatten(1)->mapInto(Instance::class)
+        );
     }
 
     public function getInstance(string $server): Instance
     {
-        return $this->getInstances()->first(function ($instance) use ($server) {
-            return $instance->getName() == $server;
-        });
+        return $this->getInstances()->first(fn ($instance) => $instance->getName() == $server);
     }
 
     public function disableUnlimited(array $servers): void
     {
         $args = [
-            'InstanceCreditSpecifications' => array_map(function ($server) {
-                return [
+            'InstanceCreditSpecifications' => array_map(
+                fn ($server) => [
                     'CpuCredits' => 'standard',
                     'InstanceId' => $this->getInstance($server)->getId(),
-                ];
-            }, $servers),
+                ], $servers
+            ),
         ];
 
         $this->client->modifyInstanceCreditSpecification($args);
@@ -55,15 +53,10 @@ class EC2
     public function addTags(array $servers, array $tags): void
     {
         $args = [
-            'Resources' => array_map(function ($server) {
-                return $this->getInstance($server)->getId();
-            }, $servers),
-            'Tags' => collect($tags)->map(function ($value, $key) {
-                return [
-                    'Key' => $key,
-                    'Value' => $value,
-                ];
-            })->values()->toArray(),
+            'Resources' => array_map(fn ($server) => $this->getInstance($server)->getId(), $servers),
+            'Tags' => collect($tags)->map(
+                fn ($value, $key) => ['Key' => $key, 'Value' => $value,]
+            )->values()->toArray(),
         ];
 
         $this->client->createTags($args);

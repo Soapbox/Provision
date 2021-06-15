@@ -6,11 +6,8 @@ use Illuminate\Support\Arr;
 
 abstract class Entity
 {
-    private $data;
-
-    public function __construct($data)
+    public function __construct(private $data)
     {
-        $this->data = $data;
     }
 
     protected function get(string $key)

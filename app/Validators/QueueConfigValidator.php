@@ -2,35 +2,26 @@
 
 namespace App\Validators;
 
+use Closure;
 use App\EC2\EC2;
 use App\Forge\Forge;
 use App\Forge\Server;
-use Closure;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
 
 class QueueConfigValidator
 {
-    private $forge;
-    private $ec2;
-
-    public function __construct(Forge $forge, EC2 $ec2)
+    public function __construct(private Forge $forge, private EC2 $ec2)
     {
-        $this->forge = $forge;
-        $this->ec2 = $ec2;
     }
 
     private function validateBalancing(Collection $servers): Closure
     {
         return function ($attribute, $value, $fail) use ($servers) {
-            $instanceTypes = $servers->map(function (Server $server) {
-                return $this->ec2->getInstance($server->getName())->getInstanceType();
-            });
+            $instanceTypes = $servers->map(fn (Server $server) => $this->ec2->getInstance($server->getName())->getInstanceType());
 
-            $balancedTypes = array_map(function ($balancing) {
-                return $balancing['server-size'];
-            }, $value);
+            $balancedTypes = array_map(fn ($balancing) => $balancing['server-size'], $value);
 
             foreach ($instanceTypes as $instanceType) {
                 if (! in_array($instanceType, $balancedTypes)) {
@@ -49,12 +40,12 @@ class QueueConfigValidator
         ])->validate();
 
         $servers = $this->forge->getServersByPattern(Arr::get($config, 'sites.server-name'));
-        $data = $servers->map(function (Server $server) use ($config) {
-            return [
+        $data = $servers->map(
+            fn (Server $server) => [
                 'server' => $server->getName(),
                 'site' => optional($this->forge->getSite($server, Arr::get($config, 'sites.site-name')))->getName(),
-            ];
-        })->toArray();
+            ]
+        )->toArray();
         Validator::make(['servers' => $data], [
             'servers' => 'array|min:1',
             'servers.*.server' => 'required|string',

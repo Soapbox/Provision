@@ -4,21 +4,21 @@ namespace App\Forge\Constants;
 
 class Regions
 {
-    const CENTRAL_CANADA = 'ca-central-1';
-    const IRELAND = 'eu-west-1';
-    const FRANKFURT = 'eu-central-1';
-    const HONG_KONG = 'ap-east-1';
-    const LONDON = 'eu-west-2';
-    const MUMBAI = 'ap-south-1';
-    const N_CALIFORNIA = 'us-west-1';
-    const OHIO = 'us-east-2';
-    const OREGON = 'us-west-2';
-    const PARIS = 'eu-west-3';
-    const SAO_PAULO = 'sa-east-1';
-    const SEOUL = 'ap-northeast-2';
-    const SINGAPORE = 'ap-southeast-1';
-    const STOCKHOLM = 'eu-north-1';
-    const SYDNEY = 'ap-southeast-2';
-    const TOKYO = 'ap-northeast-1';
-    const VIRGINIA = 'us-east-1';
+    public const CENTRAL_CANADA = 'ca-central-1';
+    public const IRELAND = 'eu-west-1';
+    public const FRANKFURT = 'eu-central-1';
+    public const HONG_KONG = 'ap-east-1';
+    public const LONDON = 'eu-west-2';
+    public const MUMBAI = 'ap-south-1';
+    public const N_CALIFORNIA = 'us-west-1';
+    public const OHIO = 'us-east-2';
+    public const OREGON = 'us-west-2';
+    public const PARIS = 'eu-west-3';
+    public const SAO_PAULO = 'sa-east-1';
+    public const SEOUL = 'ap-northeast-2';
+    public const SINGAPORE = 'ap-southeast-1';
+    public const STOCKHOLM = 'eu-north-1';
+    public const SYDNEY = 'ap-southeast-2';
+    public const TOKYO = 'ap-northeast-1';
+    public const VIRGINIA = 'us-east-1';
 }

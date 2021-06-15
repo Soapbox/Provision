@@ -4,8 +4,8 @@ namespace App\Forge\Constants;
 
 class SiteTypes
 {
-    const PHP = 'php';
-    const HTML = 'html';
-    const SYMFONY = 'Symfony';
-    const SYMFONY_DEV = 'symfony_dev';
+    public const PHP = 'php';
+    public const HTML = 'html';
+    public const SYMFONY = 'Symfony';
+    public const SYMFONY_DEV = 'symfony_dev';
 }

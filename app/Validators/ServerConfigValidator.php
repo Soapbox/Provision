@@ -2,21 +2,18 @@
 
 namespace App\Validators;
 
-use App\Exceptions\ResourceNotFound;
-use App\Forge\Forge;
 use Closure;
+use App\Forge\Forge;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Str;
+use App\Exceptions\ResourceNotFound;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 
 class ServerConfigValidator
 {
-    private $forge;
-
-    public function __construct(Forge $forge)
+    public function __construct(private Forge $forge)
     {
-        $this->forge = $forge;
     }
 
     private function validateRegion(): Closure
@@ -63,9 +60,7 @@ class ServerConfigValidator
 
             $matches = [];
             preg_match_all('/\{\{\w+\}\}/', $script, $matches);
-            $keys = array_flip(array_map(function ($key) {
-                return trim($key, '{}');
-            }, $matches[0]));
+            $keys = array_flip(array_map(fn ($key) => trim($key, '{}'), $matches[0]));
 
             if (count($keys) != count($value['arguments']) || ! empty(array_diff_key($keys, $value['arguments']))) {
                 $fail("$file does not have valid arguments.");

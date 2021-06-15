@@ -7,13 +7,8 @@ use Illuminate\Support\Facades\Storage;
 
 class Nginx
 {
-    private $file;
-    private $site;
-
-    public function __construct(string $file, Site $site)
+    public function __construct(private string $file, private Site $site)
     {
-        $this->file = $file;
-        $this->site = $site;
     }
 
     public function __toString(): string

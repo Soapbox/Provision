@@ -3,15 +3,15 @@
 namespace App\Console\Commands;
 
 use App\EC2\EC2;
-use App\Forge\Forge;
-use App\Queues\Balancing\Balancer;
-use App\Queues\Balancing\Rule;
 use App\SQS\SQS;
-use App\Validators\QueueConfigValidator;
-use App\WorkerConfiguration;
 use App\WorkerDiff;
-use Illuminate\Console\Command;
+use App\Forge\Forge;
 use Illuminate\Support\Arr;
+use App\WorkerConfiguration;
+use App\Queues\Balancing\Rule;
+use Illuminate\Console\Command;
+use App\Queues\Balancing\Balancer;
+use App\Validators\QueueConfigValidator;
 use Illuminate\Validation\ValidationException;
 
 class BalanceQueues extends Command
@@ -53,14 +53,12 @@ class BalanceQueues extends Command
         }
 
         $queues = collect(Arr::get($config, 'queues'))->keyBy('queue');
-        $queueUrls = $sqs->listQueues()->keyBy(function ($url) {
-            return substr($url, strrpos($url, '/') + 1);
-        });
-        $timeouts = $queueUrls->intersectByKeys($queues)->map(function ($url) use ($sqs) {
-            return $sqs->getVisibilityTimeout($url);
-        });
+        $queueUrls = $sqs->listQueues()->keyBy(fn ($url) => substr($url, strrpos($url, '/') + 1));
+        $timeouts = $queueUrls->intersectByKeys($queues)->map(
+            fn ($url) => $sqs->getVisibilityTimeout($url)
+        );
 
-        foreach ($queues as $queue) {
+        $queues->map(function ($queue) use ($timeouts, $sqs, $queueUrls) {
             $visibilityTimeout = $timeouts->get($queue['queue']);
             if ($queue['timeout'] + 30 > $visibilityTimeout) {
                 $this->error("Queue {$queue['queue']} has a timeout too small for the configured visibility timeout.");
@@ -76,39 +74,36 @@ class BalanceQueues extends Command
                     return 1;
                 }
             }
-        }
-
-        $pattern = Arr::get($config, 'sites.server-name');
-        $servers = $forge->getServers()->filter(function ($server) use ($pattern) {
-            return preg_match("/$pattern/", $server->getName());
         });
 
-        $sites = $servers->map(function ($server) use ($forge, $config) {
-            return $forge->getSite($server, Arr::get($config, 'sites.site-name'));
-        })->keyBy->getId();
+        $pattern = Arr::get($config, 'sites.server-name');
+        $servers = $forge->getServers()->filter(
+            fn ($server) => preg_match("/$pattern/", $server->getName())
+        );
+
+        $sites = $servers->map(
+            fn ($server) => $forge->getSite($server, Arr::get($config, 'sites.site-name'))
+        )->keyBy->getId();
 
         $balancingRules = collect($config['balancing'])->mapInto(Rule::class);
         $balancer = new Balancer($balancingRules);
-        foreach ($sites as $site) {
-            $instance = $ec2->getInstance($site->getServer()->getName());
-            $balancer->addSite($site, $instance);
-        }
+        $sites->map(
+            fn ($site) => $balancer->addSite($site, $ec2->getInstance($site->getServer()->getName()))
+        );
 
-        foreach ($queues as $queue) {
-            $balancer->addQueue($queue['queue'], $queue['processes']);
-        }
+        $queues->map(fn ($queue) => $balancer->addQueue($queue['queue'], $queue['processes']));
 
-        $balanced = $balancer->getBalancedQueues()->map(function ($value) use ($queues) {
-            return collect($value)->map(function ($count, $queue) use ($queues) {
-                return new WorkerConfiguration(array_merge($queues->get($queue), ['processes' => $count]));
-            });
-        });
+        $balanced = $balancer->getBalancedQueues()->map(
+            fn ($value) => collect($value)->map(
+                fn ($count, $queue) => new WorkerConfiguration(array_merge($queues->get($queue), ['processes' => $count]))
+            )
+        );
 
-        $diffs = $sites->map(function ($site) use ($forge, $balanced) {
-            return new WorkerDiff($site, $forge->getWorkers($site), $balanced->get($site->getId()));
-        });
+        $diffs = $sites->map(
+            fn ($site) => new WorkerDiff($site, $forge->getWorkers($site), $balanced->get($site->getId()))
+        );
 
-        foreach ($diffs as $diff) {
+        $diffs->map(function ($diff) use ($forge) {
             $this->info("Updating queue configuration for: {$diff->getSite()->getServer()->getName()}");
             foreach ($diff->workersToDelete() as $worker) {
                 $this->line("Deleting: {$worker->getQueue()} (Processes: {$worker->getProcesses()})");
@@ -119,6 +114,6 @@ class BalanceQueues extends Command
                 $this->line("Creating: {$worker->getQueue()} (Processes: {$worker->getProcesses()})");
                 $forge->createWorker($diff->getSite(), $worker);
             }
-        }
+        });
     }
 }
