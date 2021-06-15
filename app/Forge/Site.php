@@ -6,7 +6,7 @@ use App\Entity;
 
 class Site extends Entity
 {
-    public function __construct(array $data, private Server $server)
+    public function __construct(private Server $server, array $data)
     {
         parent::__construct($data);
     }

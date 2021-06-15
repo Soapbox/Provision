@@ -104,13 +104,13 @@ class Forge
         return Cache::remember("forge.server.{$server->getId()}.sites", Carbon::now()->addDay(), function () use ($server) {
             $response = json_decode($this->client->get("servers/{$server->getId()}/sites")->getBody(), true);
 
-            return collect(Arr::get($response, 'sites'))->map(fn ($site) => new Site($site, $server));
+            return collect(Arr::get($response, 'sites'))->map(fn ($site) => new Site($server, $site));
         });
     }
 
     public function getSite(Server $server, string $name): ?Site
     {
-        return $this->getSites($server)->first(fn ($site) => $site->getName() == $name);
+        return $this->getSites($server)->first(fn ($site) => $site->getName() === $name);
     }
 
     public function createSite(Server $server, array $params): Site
@@ -118,7 +118,7 @@ class Forge
         $response = $this->client->post("servers/{$server->getId()}/sites", ['json' => $params]);
         Cache::forget("forge.server.{$server->getId()}.sites");
 
-        return new Site(json_decode($response->getBody(), true)['site'], $server);
+        return new Site($server, json_decode($response->getBody(), true)['site']);
     }
 
     public function deleteSite(Site $site): void
@@ -166,7 +166,7 @@ class Forge
                 $response = $this->client->get("servers/{$server->getId()}/sites/{$site->getId()}/workers");
                 $response = json_decode($response->getBody(), true);
 
-                return collect(Arr::get($response, 'workers'))->map(fn ($worker) => new Worker($worker, $site));
+                return collect(Arr::get($response, 'workers'))->map(fn ($worker) => new Worker($site, $worker));
             }
         );
     }

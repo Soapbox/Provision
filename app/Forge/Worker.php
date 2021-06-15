@@ -7,7 +7,7 @@ use App\WorkerInterface;
 
 class Worker extends Entity implements WorkerInterface
 {
-    public function __construct(array $data, private Site $site)
+    public function __construct(private Site $site, array $data)
     {
         parent::__construct($data);
     }

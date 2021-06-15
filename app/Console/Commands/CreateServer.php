@@ -178,7 +178,9 @@ class CreateServer extends Command
 
         $this->line('Provisioning Sites');
         $this->forge->deleteSite($this->forge->getSite($server, 'default'));
-        collect(Arr::get($config, 'sites'))->map(fn ($siteConfig) => $this->provisionSite($server, $siteConfig));
+        foreach (Arr::get($config, 'sites') as $siteConfig) {
+            $this->provisionSite($server, $siteConfig);
+        }
 
         $this->line('Running post provision script');
         $scripts = Arr::get($config, 'scripts');

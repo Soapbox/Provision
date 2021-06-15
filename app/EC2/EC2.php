@@ -24,10 +24,8 @@ class EC2
 
     public function getInstances(): Collection
     {
-        return Cache::remember(
-            'ec2.instances',
-            Carbon::now()->addDay(),
-            fn () => collect($this->client->describeInstances()['Reservations'])->map(
+        return Cache::remember('ec2.instances', Carbon::now()->addDay(), fn () =>
+            collect($this->client->describeInstances()['Reservations'])->map(
                 fn ($item) => $item['Instances']
             )->flatten(1)->mapInto(Instance::class)
         );
@@ -41,11 +39,12 @@ class EC2
     public function disableUnlimited(array $servers): void
     {
         $args = [
-            'InstanceCreditSpecifications' => array_map(fn ($server) =>
-                [
+            'InstanceCreditSpecifications' => array_map(
+                fn ($server) => [
                     'CpuCredits' => 'standard',
                     'InstanceId' => $this->getInstance($server)->getId(),
-                ], $servers),
+                ], $servers
+            ),
         ];
 
         $this->client->modifyInstanceCreditSpecification($args);
@@ -56,7 +55,7 @@ class EC2
         $args = [
             'Resources' => array_map(fn ($server) => $this->getInstance($server)->getId(), $servers),
             'Tags' => collect($tags)->map(
-                fn ($value, $key) => [ 'Key' => $key, 'Value' => $value, ]
+                fn ($value, $key) => ['Key' => $key, 'Value' => $value,]
             )->values()->toArray(),
         ];
 
