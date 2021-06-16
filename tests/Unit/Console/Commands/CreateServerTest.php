@@ -197,7 +197,7 @@ class CreateServerTest extends TestCase
             return $params['name'] == 'test-web-005'
                 && $params['size'] == '0'
                 && $params['region'] == 'us-west-1'
-                && $params['php_version'] == 'php72'
+                && $params['php_version'] == 'php73'
                 && $params['database_type'] == ''
                 && $params['network'] == [5, 6];
         });
@@ -429,7 +429,7 @@ class CreateServerTest extends TestCase
             return $params['name'] == 'test-web-001'
                 && $params['size'] == '0'
                 && $params['region'] == 'us-west-1'
-                && $params['php_version'] == 'php72'
+                && $params['php_version'] == 'php73'
                 && $params['database_type'] == ''
                 && $params['network'] == [5, 6];
         });
