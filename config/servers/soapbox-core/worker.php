@@ -10,7 +10,7 @@ return [
     'config' => [
         'database-type' => DatabaseTypes::NONE,
         'name' => 'goodtalk-worker',
-        'php-version' => PHPVersions::PHP72,
+        'php-version' => PHPVersions::PHP73,
         'region' => Regions::N_CALIFORNIA,
         'size' => ServerSizes::T3_SMALL,
         'max-upload-size' => 10,
