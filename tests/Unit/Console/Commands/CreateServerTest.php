@@ -24,7 +24,7 @@ class CreateServerTest extends TestCase
                     'config' => [
                         'database-type' => DatabaseTypes::NONE,
                         'name' => 'test-web',
-                        'php-version' => PHPVersions::PHP72,
+                        'php-version' => PHPVersions::PHP73,
                         'region' => 'us-west-1',
                         'size' => 't3.small',
                         'max-upload-size' => 10,
@@ -197,7 +197,7 @@ class CreateServerTest extends TestCase
             return $params['name'] == 'test-web-005'
                 && $params['size'] == '0'
                 && $params['region'] == 'us-west-1'
-                && $params['php_version'] == 'php72'
+                && $params['php_version'] == 'php73'
                 && $params['database_type'] == ''
                 && $params['network'] == [5, 6];
         });
@@ -429,7 +429,7 @@ class CreateServerTest extends TestCase
             return $params['name'] == 'test-web-001'
                 && $params['size'] == '0'
                 && $params['region'] == 'us-west-1'
-                && $params['php_version'] == 'php72'
+                && $params['php_version'] == 'php73'
                 && $params['database_type'] == ''
                 && $params['network'] == [5, 6];
         });

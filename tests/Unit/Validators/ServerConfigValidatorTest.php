@@ -23,7 +23,7 @@ class ServerConfigValidatorTest extends TestCase
         'config' => [
             'database-type' => DatabaseTypes::NONE,
             'name' => 'soapbox-web',
-            'php-version' => PHPVersions::PHP72,
+            'php-version' => PHPVersions::PHP73,
             'region' => 'us-west-1',
             'size' => 't3.small',
             'max-upload-size' => 10,
