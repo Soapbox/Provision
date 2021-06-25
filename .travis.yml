@@ -13,7 +13,6 @@ jobs:
       env: DB=mysql:8.0
 
 before_install:
-  - composer self-update 1.10.16
   - phpenv config-rm xdebug.ini
   - mv .env.travis .env.testing
   - composer install -n --prefer-dist --no-scripts
