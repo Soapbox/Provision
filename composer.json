@@ -15,7 +15,7 @@
     ],
     "require": {
         "php": "^8.0",
-        "aws/aws-sdk-php": "^3.184",
+        "aws/aws-sdk-php": "^3.185",
         "fideloper/proxy": "^4.4",
         "guzzlehttp/guzzle": "^7.0.1",
         "jshayes/fake-requests": "^5.0",
