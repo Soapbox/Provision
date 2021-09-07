@@ -15,19 +15,19 @@
     ],
     "require": {
         "php": "^8.0",
-        "aws/aws-sdk-php": "^3.184",
+        "aws/aws-sdk-php": "^3.192",
         "fideloper/proxy": "^4.4",
         "guzzlehttp/guzzle": "^7.0.1",
         "jshayes/fake-requests": "^5.0",
         "laravel/framework": "^8.59",
         "laravel/tinker": "^2.5",
-        "laravel/ui": "^3.2",
+        "laravel/ui": "^3.3",
         "fruitcake/laravel-cors": "^2.0"
     },
     "require-dev": {
         "facade/ignition": "^2.5",
         "fakerphp/faker": "^1.9.1",
-        "friendsofphp/php-cs-fixer": "^3.0",
+        "friendsofphp/php-cs-fixer": "^3.1",
         "mockery/mockery": "^1.4.2",
         "nunomaduro/collision": "^5.0",
         "phpunit/phpunit": "^9.3.3"
